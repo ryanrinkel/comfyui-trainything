@@ -59,6 +59,18 @@ with one line: `no TrainyThing at http://127.0.0.1:4747; run
 npx -y trainything dashboard once`. ComfyUI on another machine (a rented GPU)
 needs `TRAINYTHING_URL` pointing at a daemon it can reach.
 
+When a local daemon does not answer, the node tries once to start it (15 s
+budget), with a console line naming how: a `trainything` binary on the PATH
+first, else `npx -y trainything list`. Until the npm publish the PATH binary
+is the one that works (`trainything` on npm is not ours yet, and `npx -y`
+would run whatever is published there). `TRAINYTHING_TOKEN` is passed to that
+command only when `TRAINYTHING_URL` is set too; otherwise the CLI reads the
+token from `config.json` itself.
+
+During a wait a daemon that stops answering (or answers 5xx) is retried
+every 2, 4, 8 … at most 30 seconds until the timeout, with one console line;
+a 401, 403, 404 or 409 fails at once.
+
 ## The three workflows
 
 All three are in `examples/`, built on Load Image and twelve sprites so they
@@ -124,7 +136,7 @@ the wait. An output node: it runs with nothing wired downstream.
 | `images` | | IMAGE, any batch size: one card per image |
 | `latent` (optional) | | LATENT of the same batch: `accepted_latent` is sliced from it |
 | `title` | `ComfyUI batch` | the queue's title on the phone and the dashboard |
-| `slug` | empty | the link name. Empty: from the title. An open queue's name: the cards are **appended**. A closed queue's name: an error. `random`: an unguessable one |
+| `slug` | empty | the link name. Empty: from the title. An open queue's name: the cards are **appended** (see below). A closed queue's name: an error. `random`: an unguessable one |
 | `prompt` | `Keep this one?` | the question on every card |
 | `intro` | empty | shown before the first card. Empty: "Generated from: *the positive prompt*." and what to do in this mode |
 | `mode` | `single` | `single`, `pair`, `choose`, `select` (see Modes) |
@@ -133,7 +145,7 @@ the wait. An output node: it runs with nothing wired downstream.
 | `identity` | `name_email` | reviewers give a name and email, or `anonymous` |
 | `order` | `coverage` | `coverage` (cards with fewest reviews first) or `fixed` (batch order) |
 | `min_reviews` | 1 | reviews per card before the queue is done (1 to 50) |
-| `public` | off | start the tunnel now, so the link works off this machine |
+| `public` | off | start the tunnel now (before any upload), so the link works off this machine; if the tunnel fails, the console says so and the link is the local one |
 | `project` | `comfyui` | the project tag on the dashboard |
 | `images_b` (optional) | | `pair` mode: the B side, same batch size |
 | `labels` (optional) | empty | one line per image, shown above its card |
@@ -142,7 +154,21 @@ the wait. An output node: it runs with nothing wired downstream.
 | `on_timeout` | `partial` | `partial`: go on with what was judged, the rest `unjudged`. `block`: nothing downstream runs |
 
 Hidden: the node's id, the prompt graph and the workflow, which go into each
-PNG's `prompt` / `workflow` chunks and feed the graph walk.
+PNG's `prompt` / `workflow` chunks and feed the graph walk. Under ComfyUI's
+`--disable-metadata` the PNGs carry neither chunk, as Save Image's; the walk
+still fills `meta`.
+
+**Appending to a queue the node did not make.** A queue made by the CLI, the
+dashboard or the MCP server keeps its own settings, checked before anything
+is uploaded: a `mode` other than the queue's is an error naming both; other
+`options` give way to the queue's (a console line says so); a queue with no
+`min_reviews` gets the node's (without one the wait could only end on a close
+or the timeout), and a queue with its own keeps it (a console line when it
+differs from the widget).
+
+The checks the split needs run before anything is uploaded or waited on:
+`pair` needs `images_b` of the same batch size, and a wired `latent` needs at
+least as many samples as `images`.
 
 | Output | Type | What it holds |
 |---|---|---|
@@ -153,7 +179,7 @@ PNG's `prompt` / `workflow` chunks and feed the graph walk.
 | `labels` | STRING | `labels.jsonl` for this run: one line per image with `ref`, `label`, `verdict`, the tallies, `contested`, `notes` |
 | `summary` | STRING | the daemon's `summary.md`: counts, then notes grouped by verdict |
 | `notes` | STRING | the notes, one per line, prefixed by the card's label |
-| `accepted_meta` | STRING | a JSON array of the keepers' `meta`: `index`, `run`, `seed`, `steps`, `cfg`, `sampler`, `scheduler`, `denoise`, `prompt_text`, `negative_text`, `checkpoint`, `loras`, `batch_size`, `width`, `height`, `walk`, plus your `meta` |
+| `accepted_meta` | STRING | a JSON array of the keepers' `meta`: `index`, `position`, `run`, `seed`, `steps`, `cfg`, `sampler`, `scheduler`, `denoise`, `prompt_text`, `negative_text`, `checkpoint`, `loras`, `batch_size`, `width`, `height`, `walk`, plus your `meta` |
 | `accepted_indices` | INT list | the keepers' batch indices; a node downstream runs once per keeper |
 | `link` | STRING | the review link (the tunnel's when `public` is on) |
 | `slug` | STRING | the queue's name |
@@ -188,6 +214,9 @@ the graph.
 | `timeout_minutes` | 45 | as Review |
 | `on_timeout` | `partial` | as Review |
 
+`pair` mode without `images_b` (or with another batch size), or a latent with
+fewer samples than `images`, is an error at once, before the wait.
+
 Outputs: Review's first nine (`accepted` … `accepted_indices`), not `link` or
 `slug`. Only this run's cards are split, even in an appended queue.
 
@@ -204,12 +233,14 @@ A later run reads a queue back by name, images from the daemon's blob store.
 | Output | Type | What it holds |
 |---|---|---|
 | `accepted`, `rejected`, `images` | IMAGE | as Review; `images` is every image card in card order (an appended queue's runs one after another) |
-| `labels`, `summary`, `notes`, `accepted_meta` | STRING | as Review, for the whole queue |
-| `accepted_indices` | INT list | positions in Load's batch (`accepted_meta[].index` is the position in the keeper's *own* run, for Latent From Batch) |
+| `labels`, `summary`, `notes` | STRING | as Review, for the whole queue |
+| `accepted_meta` | STRING | as Review. `position` is the keeper's position in Load's batch (the same numbers as `accepted_indices`); `index` is its index in the batch its own Send was given (the sampler's), for Latent From Batch. With several runs in the queue they differ. A card that Send did not make has no `index` |
+| `accepted_indices` | INT list | positions in Load's batch |
 
 No `accepted_latent`: a latent is not stored. Cards that are not images
 (text, audio, video added by the CLI) are skipped with a console line. ComfyUI
-re-runs Load only when the queue moved (cards, judgments, status, closed time).
+re-runs Load only when the queue moved (cards, judgments, status, closed time,
+last activity).
 
 ### TrainyThing Filter
 
@@ -276,7 +307,7 @@ Each finished wait (Review, Wait) and each Load writes
 | File | What |
 |---|---|
 | `results.json` | the whole queue: every card, its items, `meta`, judgments and summary |
-| `blobs/` | every image as the PNG that was uploaded, with the `prompt` and `workflow` chunks Save Image writes |
+| `blobs/` | every image as the PNG that was uploaded, with the `prompt` and `workflow` chunks Save Image writes (none under `--disable-metadata`) |
 | `labels.jsonl` | one line per card: `ref`, `label`, `verdict`, tallies, `contested`, `notes` |
 | `summary.md` | counts and notes grouped by verdict, written to be read |
 | `preferences.jsonl` | `pair` mode only: one line per pair with a winner |
@@ -295,9 +326,15 @@ back after this folder is gone.
   Change a seed or a widget to send again.
 - **`accepted_latent` is always blocked in `pair` mode**: the wired latent is
   A's and a pair B won has none. VAE Encode `accepted` for the winners' latent.
-- **Load after an undo**: an undo followed by a different verdict leaves the
-  judgment count unchanged, so ComfyUI may reuse Load's last result. Press
-  Queue after the next verdict, or change the slug field and back.
+- **Load re-reads on a reviewer's visit.** Load's cache key carries the
+  queue's last activity, so an undo followed by another verdict re-runs it;
+  that time also moves when a reviewer merely opens a card, which costs one
+  re-read and nothing else.
+- **The run's folder is best effort after a wait.** A full or read-only
+  output folder, or a failed bundle, is one console line; the split is
+  returned anyway and Load reads the queue later. A daemon that answers
+  `results?out=` from another filesystem (Docker on 127.0.0.1) is noticed
+  (no fresh `results.json` here) and the bundle is read instead.
 - **`public` needs cloudflared.** The daemon fetches it on first use; where
   that fails, install `cloudflared` on the PATH. Without `public` the link
   only works on this machine (or your LAN, if the daemon is bound to it).

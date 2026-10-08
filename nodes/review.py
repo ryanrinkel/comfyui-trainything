@@ -35,6 +35,8 @@ class TrainyThingReview(io.ComfyNode):
     async def execute(cls, images, title, slug, prompt, intro, mode, options, feedback, identity, order,
                       min_reviews, public, project, timeout_minutes, on_timeout,
                       latent=None, images_b=None, labels="", meta="") -> io.NodeOutput:
+        # What the split will need, before anything is uploaded or waited on.
+        c.check_wait_inputs(mode, images, latent, images_b if mode == "pair" else None)
         client, handle = await send_from_inputs(
             cls, images, title=title, slug=slug, prompt=prompt, intro=intro, mode=mode, options=options,
             feedback=feedback, identity=identity, order=order, min_reviews=min_reviews, public=public,

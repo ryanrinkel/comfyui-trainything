@@ -102,7 +102,7 @@ class Daemon:
                 pass
 
 
-def start_daemon(root: Path) -> Daemon:
+def start_daemon(root: Path, extra_env: dict | None = None) -> Daemon:
     repo = trainything_repo()
     cli = repo / "dist" / "cli.js"
     if not cli.exists():
@@ -115,6 +115,7 @@ def start_daemon(root: Path) -> Daemon:
     env["TRAINYTHING_HOME"] = str(home)
     env.pop("TRAINYTHING_URL", None)
     env.pop("TRAINYTHING_TOKEN", None)
+    env.update(extra_env or {})
     subprocess.run(
         ["node", str(cli), "serve", "--daemon", "--port", str(port)],
         env=env,

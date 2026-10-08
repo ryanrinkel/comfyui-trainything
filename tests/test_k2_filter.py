@@ -133,7 +133,7 @@ def test_load_run_maps_the_whole_queue():
     assert run.split.accepted == [0] and run.split.rejected == [2] and run.split.unjudged == [1]
     assert [ln["verdict"] for ln in run.lines] == ["accept", "unjudged", "reject"]
     # accepted_meta keeps what Send attached (Send's per-run index included).
-    assert json.loads(c.meta_json(run, run.split.accepted)) == [{"index": 0, "seed": 1, "ref": "r1-0"}]
+    assert json.loads(c.meta_json(run, run.split.accepted)) == [{"index": 0, "seed": 1, "ref": "r1-0", "position": 0}]
     assert c.notes_text(run) == "three: no"
     assert c.LOAD_OUTPUTS == ("accepted", "rejected", "images", "labels", "summary", "notes", "accepted_meta", "accepted_indices")
 

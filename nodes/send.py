@@ -29,10 +29,14 @@ async def send_from_inputs(cls, images, *, title, slug, prompt, intro, mode, opt
         identity=identity, order=order, min_reviews=min_reviews, project=project,
         prompt_text=c.intro_prompt(graph, node_id, facts, mode),
     )
+    # --disable-metadata: no prompt / workflow chunk in the uploaded PNGs, as
+    # Save Image (§6.3); the walk above has already filled meta from the graph.
+    no_meta = c.metadata_disabled()
     client = await c.connect()
     handle = await c.send(
         client, images, config, node_id=node_id, images_b=images_b, labels=labels, meta=meta, facts=facts,
-        prompt=graph, extra_pnginfo=cls.hidden.extra_pnginfo, public=public,
+        prompt=None if no_meta else graph, extra_pnginfo=None if no_meta else cls.hidden.extra_pnginfo,
+        public=public,
     )
     c.say(c.send_line(handle))
     return client, handle

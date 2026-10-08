@@ -16,7 +16,7 @@ import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence
 
 from conftest import FIXTURES, SPRITES, free_port
 
@@ -31,7 +31,8 @@ def load_prompt(name: str) -> Dict[str, Any]:
 
 class Comfy:
     def __init__(self, root: Path, daemon: Any, python: str = sys.executable,
-                 extra_env: Optional[Dict[str, str]] = None, comfy_dir: Path = COMFY) -> None:
+                 extra_env: Optional[Dict[str, str]] = None, comfy_dir: Path = COMFY,
+                 extra_args: Sequence[str] = ()) -> None:
         self.root = root
         self.input = root / "input"
         self.output = root / "output"
@@ -55,7 +56,7 @@ class Comfy:
         self.proc = subprocess.Popen(
             [python, "main.py", "--cpu", "--port", str(self.port), "--listen", "127.0.0.1", "--disable-auto-launch",
              "--input-directory", str(self.input), "--output-directory", str(self.output),
-             "--temp-directory", str(self.temp), "--user-directory", str(self.user)],
+             "--temp-directory", str(self.temp), "--user-directory", str(self.user), *extra_args],
             cwd=str(comfy_dir), env=env, stdout=self._fh, stderr=subprocess.STDOUT, start_new_session=True,
         )
         deadline = time.monotonic() + 240

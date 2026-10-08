@@ -1,6 +1,6 @@
 """A batch of images -> cards in a queue (PLAN-COMFY §4.2). No ComfyUI import.
 
-    run = make_run_id(node_id)                       # "<time>-n<node id>"
+    run = make_run_id(node_id)                       # "<time>-n<node id>-<4 hex>"
     handle = send_batch(client, images, queue_config, run=run, prompt=..., ...)
 
 Each card is ``{ref: "<run>-<index>", kind: "image", src: "blob:<sha>",
@@ -10,13 +10,18 @@ label?, meta}``; in pair mode ``{ref, label?, meta, items: [A, B]}``.
 
 The queue is created when the slug is new (or empty / ``random``), appended to
 when a queue with that slug is open, and a closed one is an error that names
-it, never a silent new queue.
+it, never a silent new queue. An append checks the queue against the widgets:
+another mode is an error, other options are the queue's (with a console
+line), and a queue with no ``min_reviews`` (one the CLI, the dashboard or the
+MCP server made) gets the widget's, or the wait could only end on a close or
+the timeout.
 """
 
 from __future__ import annotations
 
 import json
 import re
+import secrets
 import time
 import unicodedata
 from typing import Any, Dict, List, Optional, Sequence
@@ -27,6 +32,16 @@ from .trainything_client import AsyncTrainyThingClient, ClientError, TrainyThing
 SLUG_MIN = 3
 SLUG_MAX = 40
 RANDOM_SLUG = "random"
+
+
+def say(line: str) -> None:
+    """One console line, the way ComfyUI's own nodes print."""
+    print(f"[TrainyThing] {line}", flush=True)
+
+
+class QueueModeError(ValueError):
+    """An append whose mode is not the queue's: a ``choose`` batch in a
+    ``single`` queue would be judged by the wrong question."""
 
 
 class QueueClosedError(ClientError):
@@ -52,11 +67,14 @@ def normalize_slug(text: str) -> str:
 
 
 def make_run_id(node_id: Any, now: Optional[float] = None) -> str:
-    """``<UTC time to the millisecond>-n<node id>``: unique per run and node."""
+    """``<UTC time to the millisecond>-n<node id>-<4 hex>``. The random
+    suffix keeps two runs of one node in the same millisecond apart (ComfyUI
+    runs a node once per item of a list input; the daemon does not enforce
+    unique refs)."""
     t = time.time() if now is None else now
     stamp = time.strftime("%Y%m%dT%H%M%S", time.gmtime(t)) + f"{int((t % 1) * 1000):03d}"
     node = re.sub(r"[^A-Za-z0-9]+", "_", str(node_id)) or "x"
-    return f"{stamp}-n{node}"
+    return f"{stamp}-n{node}-{secrets.token_hex(2)}"
 
 
 def card_ref(run: str, index: int) -> str:
@@ -161,11 +179,60 @@ def build_cards(
     return cards
 
 
+def _options_key(options: Any) -> List[Any]:
+    return [(o.get("id"), o.get("label")) for o in options or [] if isinstance(o, dict)]
+
+
+def reconcile_queue(client: TrainyThingClient, queue: Dict[str, Any], body: Dict[str, Any]) -> Dict[str, Any]:
+    """An append: check the open queue against the widgets before any upload.
+
+    - ``mode`` differs: ``QueueModeError`` naming both.
+    - ``options`` differ: the queue's stand (the daemon keeps them), with a
+      console line.
+    - The queue has no ``completion.min_reviews_per_card``: PATCH it to the
+      widget's (``completion`` replaces the whole object, so a deadline is
+      kept); if the daemon refuses, a console line says the wait can only end
+      on a close or the timeout. A queue with its own value keeps it, with a
+      console line when it differs.
+
+    Returns the queue row (the patched one when it was patched)."""
+    name = queue.get("share_token") or queue.get("id")
+    want_mode = body.get("mode")
+    if want_mode is not None and queue.get("mode") and queue.get("mode") != want_mode:
+        raise QueueModeError(
+            f"queue {name} is a {queue.get('mode')} queue and this node's mode is {want_mode}: "
+            f"set mode to {queue.get('mode')} or pick another slug (cards of one mode never go into another's queue)"
+        )
+    want_options = body.get("options")
+    if want_options and _options_key(want_options) != _options_key(queue.get("options")):
+        have = ", ".join(str(o.get("id")) for o in queue.get("options") or []) or "none"
+        say(f"queue {name} keeps its own options ({have}); the options widget is ignored on an append")
+    want_min = (body.get("completion") or {}).get("min_reviews_per_card")
+    if want_min is None:
+        return queue
+    completion = dict(queue.get("completion") or {})
+    have_min = completion.get("min_reviews_per_card")
+    if have_min is not None:
+        if int(have_min) != int(want_min):
+            say(f"queue {name} keeps its own min_reviews {have_min} (the widget says {want_min})")
+        return queue
+    completion["min_reviews_per_card"] = int(want_min)
+    try:
+        patched = client.patch_queue(queue["id"], {"completion": completion})
+    except ClientError as err:
+        say(f"queue {name} has no min_reviews and the daemon would not set it ({err}); "
+            f"the wait can only end on a close or the timeout")
+        return queue
+    say(f"queue {name} had no min_reviews; set it to {want_min} so the wait can end")
+    return patched.get("queue") or queue
+
+
 def ensure_queue(client: TrainyThingClient, config: Dict[str, Any]) -> Dict[str, Any]:
     """Create or append. ``config`` is the ``POST /api/queues`` body; its
     ``slug`` decides: empty or ``random`` -> create; an open queue under the
-    (normalized) slug -> append; a closed one -> ``QueueClosedError``; none ->
-    create under it. Returns ``{queue, local_url, share_url, created}``."""
+    (normalized) slug -> append (``reconcile_queue``); a closed one ->
+    ``QueueClosedError``; none -> create under it. Returns ``{queue,
+    local_url, share_url, created}``."""
     body = {k: v for k, v in config.items() if v is not None and v != ""}
     slug = str(body.get("slug", "")).strip()
     if slug and slug.lower() != RANDOM_SLUG:
@@ -175,6 +242,7 @@ def ensure_queue(client: TrainyThingClient, config: Dict[str, Any]) -> Dict[str,
             queue = found["queue"]
             if queue.get("status") == "closed":
                 raise QueueClosedError(queue.get("share_token") or wanted)
+            queue = reconcile_queue(client, queue, body)
             return {
                 "queue": queue,
                 "local_url": found.get("local_url"),
@@ -188,6 +256,21 @@ def ensure_queue(client: TrainyThingClient, config: Dict[str, Any]) -> Dict[str,
         "share_url": created.get("share_url"),
         "created": True,
     }
+
+
+def share_queue(client: TrainyThingClient, q: Dict[str, Any]) -> None:
+    """``public``: start the tunnel for the queue ``q`` (from
+    ``ensure_queue``) before any card is added. A failure (no cloudflared,
+    its 60 s timeout) is one console line and the local link, never an
+    error: a retry would add the batch twice."""
+    name = q["queue"].get("share_token") or q["queue"]["id"]
+    try:
+        shared = client.share(q["queue"]["id"])
+    except ClientError as err:
+        say(f"public: could not share {name} ({err}); the link is the local one, this machine only")
+        return
+    if shared.get("share_url"):
+        q["share_url"] = shared["share_url"]
 
 
 def encode_batch(images: Any, prompt: Any = None, extra_pnginfo: Optional[Dict[str, Any]] = None) -> List[bytes]:
@@ -206,9 +289,13 @@ def send_batch(
     facts: Optional[Dict[str, Any]] = None,
     prompt: Any = None,
     extra_pnginfo: Optional[Dict[str, Any]] = None,
+    public: bool = False,
 ) -> Dict[str, Any]:
     """Send's body, blocking: resolve the queue (before any upload, so a
-    closed one fails fast), encode and upload each image, add the cards.
+    closed one or another mode fails fast), share it when ``public`` (also
+    before any upload; a failure falls back to the local link), encode and
+    upload each image, add the cards. ``prompt`` / ``extra_pnginfo`` None
+    writes no ``prompt`` / ``workflow`` chunk (``--disable-metadata``).
 
     Returns the queue handle §4.2 describes: ``{base_url, slug, queue_id,
     link, share_url, mode, refs, added, total, created}``."""
@@ -222,6 +309,8 @@ def send_batch(
 
     q = ensure_queue(client, queue_config)
     queue = q["queue"]
+    if public:
+        share_queue(client, q)
     shas = [client.upload_blob(p, "image/png")["sha256"] for p in pngs]
     shas_b = [client.upload_blob(p, "image/png")["sha256"] for p in pngs_b] if pngs_b is not None else None
     cards = build_cards(shas, run, label_list, meta_list, facts, shas_b)

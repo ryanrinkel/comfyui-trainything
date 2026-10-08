@@ -59,7 +59,7 @@ def run_folder(daemon, sprite_batch, graph, tmp_path_factory):
     Reviewer(daemon.url, handle["slug"], "Kay").review(
         lambda ref: "accept" if ref in keep else "reject", notes=lambda ref, v: "off model" if v == "reject" else None)
     root = tmp_path_factory.mktemp("k4-out")
-    write_run_folder_sync(client, handle["slug"], "single", str(root))
+    write_run_folder_sync(client, handle["queue_id"], handle["slug"], "single", str(root))
     return root / handle["slug"], run, facts["prompt_text"]
 
 

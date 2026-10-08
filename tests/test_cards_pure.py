@@ -1,5 +1,7 @@
 """cards.py without a daemon: the widget parsers, the card objects, slugs."""
 
+import re
+
 import pytest
 
 from comfyui_trainything.cards import (
@@ -62,6 +64,6 @@ def test_build_pair_cards():
 def test_slug_and_run_and_intro():
     assert normalize_slug("  Sprites 08 — Café!! ") == "sprites-08-cafe"
     run = make_run_id("12", now=1791460800.25)
-    assert run.endswith("-n12") and "250" in run
+    assert re.fullmatch(r"20261008T120000250-n12-[0-9a-f]{4}", run), run
     assert default_intro("a witch") == "Generated from: a witch. Reject anything that misses it."
     assert default_intro("  ") is None

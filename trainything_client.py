@@ -25,11 +25,11 @@ must never block the event loop.
 from __future__ import annotations
 
 import asyncio
-import io
 import json
 import os
 import shutil
 import subprocess
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -42,7 +42,7 @@ DEFAULT_PORT = 4747
 MAX_BLOB_BYTES = 200 * 1024 * 1024
 #: How long one ``/health`` probe may take (client.ts ``HEALTH_TIMEOUT_MS``).
 HEALTH_TIMEOUT_S = 1.5
-#: Budget for the one ``npx -y trainything list`` auto-start attempt (§4.7).
+#: Budget for the one ``trainything list`` auto-start attempt (§4.7).
 AUTO_START_TIMEOUT_S = 15.0
 #: Ordinary request timeout. Uploads and bundles get longer.
 REQUEST_TIMEOUT_S = 30.0
@@ -267,7 +267,10 @@ class TrainyThingClient:
         content_type: Optional[str] = None,
         timeout: Optional[float] = None,
         auth: bool = True,
+        sink: Any = None,
     ) -> _Response:
+        """One request. With ``sink`` (a binary file object) a 2xx body is
+        streamed into it in chunks and the response's ``body`` is empty."""
         headers: Dict[str, str] = {}
         if auth:
             headers["Authorization"] = f"Bearer {self._token}"
@@ -282,6 +285,9 @@ class TrainyThingClient:
         req = urllib.request.Request(self._url(pathname, query), data=data, method=method, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=timeout or self.timeout) as res:
+                if sink is not None:
+                    shutil.copyfileobj(res, sink)
+                    return _Response(res.status, res.headers, b"")
                 return _Response(res.status, res.headers, res.read())
         except urllib.error.HTTPError as err:
             raw = b""
@@ -342,6 +348,12 @@ class TrainyThingClient:
         judgments, reviewers, coverage, min_per_card, done, reason, contested,
         share_url, local_url}``."""
         return self._json("GET", f"/api/queues/{_quote(id_or_slug)}/status")
+
+    def patch_queue(self, id_or_slug: str, patch: Dict[str, Any]) -> Dict[str, Any]:
+        """``PATCH /api/queues/:id`` (the dashboard's settings form) ->
+        ``{queue, local_url, share_url, link_changed}``. ``completion`` replaces
+        the whole object; ``mode`` and ``order`` are 409 once cards exist."""
+        return self._json("PATCH", f"/api/queues/{_quote(id_or_slug)}", json_body=patch)
 
     def add_cards(self, id_or_slug: str, cards: List[Dict[str, Any]]) -> Dict[str, Any]:
         """``POST /api/queues/:id/cards`` with ``{cards}`` -> ``{added, total, warnings}``."""
@@ -410,21 +422,30 @@ class TrainyThingClient:
         """``GET /api/queues/:id/results/bundle.zip``, unpacked into ``dest_dir``:
         ``results.json`` plus ``blobs/<sha><ext>``. Works against a remote
         daemon (§10 question 5). Returns the paths written."""
-        res = self._send("GET", f"/api/queues/{_quote(id_or_slug)}/results/bundle.zip", timeout=max(self.timeout, 600.0))
         os.makedirs(dest_dir, exist_ok=True)
         root = os.path.realpath(dest_dir)
         written: List[str] = []
-        with zipfile.ZipFile(io.BytesIO(res.body)) as zf:
-            for info in zf.infolist():
-                if info.is_dir():
-                    continue
-                target = os.path.realpath(os.path.join(root, info.filename))
-                if os.path.commonpath([root, target]) != root:
-                    raise ClientError(f"bundle entry escapes the folder: {info.filename}", 0, None)
-                os.makedirs(os.path.dirname(target), exist_ok=True)
-                with zf.open(info) as src, open(target, "wb") as dst:
-                    shutil.copyfileobj(src, dst)
-                written.append(target)
+        # Streamed to a temp file beside the destination, never held in memory:
+        # a bundle carries every image of the queue.
+        with tempfile.TemporaryFile(dir=root, prefix=".bundle-") as tmp:
+            self._send(
+                "GET",
+                f"/api/queues/{_quote(id_or_slug)}/results/bundle.zip",
+                timeout=max(self.timeout, 600.0),
+                sink=tmp,
+            )
+            tmp.seek(0)
+            with zipfile.ZipFile(tmp) as zf:
+                for info in zf.infolist():
+                    if info.is_dir():
+                        continue
+                    target = os.path.realpath(os.path.join(root, info.filename))
+                    if os.path.commonpath([root, target]) != root:
+                        raise ClientError(f"bundle entry escapes the folder: {info.filename}", 0, None)
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    with zf.open(info) as src, open(target, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+                    written.append(target)
         return written
 
 
@@ -459,20 +480,53 @@ class AsyncTrainyThingClient:
 # ---------------------------------------------------------------------------
 
 
-def _run_npx_list(base_url: str, home: Optional[str], budget: float) -> None:
-    """``npx -y trainything list`` once; the CLI auto-starts the daemon for a
-    local URL (design §8.2). Failure of any kind is fine: the probe decides."""
+def _say(line: str) -> None:
+    print(f"[TrainyThing] {line}", flush=True)
+
+
+def autostart_command() -> Optional[List[str]]:
+    """What starts a local daemon: a ``trainything`` binary on the PATH
+    first (the one that works until the npm publish), else ``npx -y
+    trainything list`` (§10 question 3's default), else None."""
+    binary = shutil.which("trainything")
+    if binary is not None:
+        return [binary, "list"]
     npx = shutil.which("npx")
-    if npx is None:
-        return
+    if npx is not None:
+        return [npx, "-y", "trainything", "list"]
+    return None
+
+
+def autostart_env(base_url: str, home: Optional[str]) -> Dict[str, str]:
+    """ComfyUI's environment for the auto-start, pointed at ``base_url``.
+
+    ``TRAINYTHING_TOKEN`` goes along only when ``TRAINYTHING_URL`` is set
+    too: a token set without a URL is not one the user tied to this local
+    daemon, the CLI reads ``owner_token`` from config.json itself, and a
+    package ``npx`` may have just fetched gets no secret it does not need."""
     env = dict(os.environ)
+    if not _nonempty(os.environ.get("TRAINYTHING_URL")):
+        env.pop("TRAINYTHING_TOKEN", None)
     env["TRAINYTHING_URL"] = base_url
     if _nonempty(home):
         env["TRAINYTHING_HOME"] = resolve_home(home)
+    return env
+
+
+def _run_autostart(base_url: str, home: Optional[str], budget: float) -> None:
+    """``trainything list`` once (the PATH binary, else ``npx -y``); the CLI
+    auto-starts the daemon for a local URL (design §8.2). Failure of any kind
+    is fine: the probe decides."""
+    cmd = autostart_command()
+    if cmd is None:
+        _say(f"no daemon at {base_url}, and neither trainything nor npx is on the PATH to start one")
+        return
+    shown = "trainything list (" + cmd[0] + ")" if len(cmd) == 2 else "npx -y trainything list"
+    _say(f"no daemon at {base_url}; starting one with {shown}")
     try:
         subprocess.run(
-            [npx, "-y", "trainything", "list"],
-            env=env,
+            cmd,
+            env=autostart_env(base_url, home),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -494,7 +548,7 @@ def connect(
     """A ready client, or ``NoDaemonError`` with the one line of §4.7.
 
     When ``/health`` does not answer and the URL is local (and ``auto_start``),
-    run ``npx -y trainything list`` once within ``timeout`` seconds, then
+    run ``trainything list`` (the PATH binary, else ``npx -y``) once within ``timeout`` seconds, then
     re-probe until the same budget runs out. A non-local URL is never started
     from here."""
     url = resolve_base_url(base_url, home)
@@ -505,7 +559,7 @@ def connect(
         raise NoDaemonError(url)
 
     deadline = time.monotonic() + timeout
-    (_starter or _run_npx_list)(url, home, timeout)
+    (_starter or _run_autostart)(url, home, timeout)
     while True:
         if client.probe(timeout=max(0.25, min(HEALTH_TIMEOUT_S, deadline - time.monotonic()))):
             # The daemon may have just written config.json with a fresh token.

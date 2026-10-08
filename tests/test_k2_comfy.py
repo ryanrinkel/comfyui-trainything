@@ -185,13 +185,18 @@ def test_run2_load_filter(env):
 
     # accepted_meta is what Send attached: the same objects Wait returned, and
     # each one the card's meta in the daemon (plus its ref).
+    # position is where each keeper is in this node's batch: Wait's is per
+    # run, Load's across both runs (= accepted_indices); index is Send's.
     meta = json.loads(text_of(h, "77"))
-    assert meta == wait_meta
+    unplaced = lambda ms: [{k: v for k, v in m.items() if k != "position"} for m in ms]  # noqa: E731
+    assert unplaced(meta) == unplaced(wait_meta)
+    assert [m["position"] for m in meta] == [i for i in range(24) if i % 12 < 8]
+    assert [m["position"] for m in wait_meta] == [m["index"] for m in wait_meta]
     doc = json.loads(daemon.client().results(slug, "json"))
     by_ref = {c["ref"]: c for c in doc["cards"]}
     for m in meta:
         card_meta = by_ref[m["ref"]]["meta"]
-        assert {k: v for k, v in m.items() if k != "ref"} == card_meta
+        assert {k: v for k, v in m.items() if k not in ("ref", "position")} == card_meta
         assert card_meta["source"] == "k1-test" and "walk" in card_meta and "run" in card_meta
     keepers = [i for i in range(24) if i % 12 < 8]
     assert ui_texts(h, "78") == [str(i) for i in keepers]

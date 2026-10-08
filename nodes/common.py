@@ -11,7 +11,7 @@ in a plain venv.
     status  = await wait_until_done(client, handle, timeout_s, interrupted=...)
     run     = await collect(client, handle)          # labels, results.json, summary for this run
     outputs = split_outputs(run, images, latent, images_b)
-    folder  = await write_run_folder(client, handle["slug"], root)
+    folder  = await write_run_folder(client, handle["queue_id"], handle["slug"], mode, root)
 """
 
 from __future__ import annotations
@@ -48,6 +48,10 @@ ORDERS = ["coverage", "fixed"]
 ON_TIMEOUT = ["partial", "block"]
 #: §4.3: poll /status this often.
 POLL_S = 2.0
+#: A daemon that does not answer (or answers 5xx) during a wait is retried
+#: after 2 s, 4 s, 8 s, ... at most 30 s apart, until the deadline.
+RETRY_BASE_S = 2.0
+RETRY_MAX_S = 30.0
 #: How often the wait looks at ComfyUI's interrupt flag between polls.
 INTERRUPT_CHECK_S = 0.25
 DEFAULT_TIMEOUT_MIN = 45.0
@@ -81,8 +85,8 @@ def say(line: str) -> None:
 
 async def connect() -> AsyncTrainyThingClient:
     """The daemon from ``TRAINYTHING_URL`` / ``_TOKEN``, then config.json, then
-    127.0.0.1:4747; one ``npx -y trainything list`` when a local one does not
-    answer; else ``NoDaemonError`` whose message is the one line of §4.7.
+    127.0.0.1:4747; one ``trainything list`` (the PATH binary, else ``npx -y
+    trainything list``) when a local one does not answer; else ``NoDaemonError`` whose message is the one line of §4.7.
     Never a widget: the token is read from the environment or the config."""
     return await connect_async()
 
@@ -214,8 +218,9 @@ async def send(
     extra_pnginfo: Optional[Dict[str, Any]] = None,
     public: bool = False,
 ) -> Dict[str, Any]:
-    """Encode, upload, create-or-append (cards.send_batch, on a worker thread),
-    then share when ``public``. Returns the queue handle (§4.2)."""
+    """Create-or-append, share when ``public`` (before any upload; a failure
+    is the local link and a console line), encode, upload, add the cards
+    (cards.send_batch, on a worker thread). Returns the queue handle (§4.2)."""
     run = make_run_id(node_id)
     handle = await asyncio.to_thread(
         send_batch,
@@ -229,14 +234,20 @@ async def send(
         facts=facts,
         prompt=prompt,
         extra_pnginfo=extra_pnginfo,
+        public=public,
     )
     handle["run"] = run
-    if public:
-        shared = await client.share(handle["queue_id"])
-        if shared.get("share_url"):
-            handle["share_url"] = shared["share_url"]
-            handle["link"] = shared["share_url"]
     return handle
+
+
+def metadata_disabled() -> bool:
+    """ComfyUI's ``--disable-metadata``: Save Image then writes no ``prompt``
+    / ``workflow`` chunk, and neither does Send (§6.3). False outside ComfyUI."""
+    try:
+        from comfy.cli_args import args
+    except Exception:
+        return False
+    return bool(getattr(args, "disable_metadata", False))
 
 
 def graph_facts(prompt: Any, node_id: Any) -> Dict[str, Any]:
@@ -386,19 +397,49 @@ async def wait_until_done(
     preview: Any = None,
     poll_s: float = POLL_S,
     on_status: Optional[Callable[[Dict[str, Any]], Awaitable[None]]] = None,
+    retry_base_s: float = RETRY_BASE_S,
 ) -> WaitResult:
     """Poll ``/status`` every ``poll_s`` with ``asyncio.sleep`` (the event loop
     keeps serving), report "judged N of M" as progress, and return when
     ``done`` or at the timeout. ``interrupted()`` is checked every quarter
     second; when it is true, ``WaitInterrupted`` is raised: the queue is left
-    open, as it is on ``CancelledError``."""
+    open, as it is on ``CancelledError``.
+
+    A daemon that does not answer (status 0) or answers 5xx is retried with
+    backoff (``retry_base_s``, doubling, at most ``RETRY_MAX_S``) until the
+    deadline, with one console line the first time; at the deadline the last
+    error is raised. 401, 403, 404, 409 (any other 4xx) fail at once."""
     deadline = time.monotonic() + max(0.0, timeout_s)
     qid = handle["queue_id"]
     last_judged = None
+
+    async def pause(until: float) -> None:
+        while time.monotonic() < until:
+            if interrupted():
+                raise WaitInterrupted()
+            await asyncio.sleep(min(INTERRUPT_CHECK_S, max(0.0, until - time.monotonic())))
+
+    failures = 0
+    warned = False
     while True:
         if interrupted():
             raise WaitInterrupted()
-        st = await client.status(qid)
+        try:
+            st = await client.status(qid)
+        except ClientError as err:
+            if not (err.status == 0 or err.status >= 500):
+                raise
+            now = time.monotonic()
+            if now >= deadline:
+                raise
+            if not warned:
+                warned = True
+                say(f"{handle.get('slug')}: the daemon did not answer ({err}); retrying until the timeout")
+            delay = min(RETRY_MAX_S, retry_base_s * (2 ** failures))
+            failures += 1
+            await pause(min(deadline, now + delay))
+            continue
+        failures = 0
         cards = int(st.get("cards") or 0)
         judged = int(st.get("judged") or 0)
         await set_progress(judged, cards, node_id=node_id, preview=preview)
@@ -412,11 +453,7 @@ async def wait_until_done(
         now = time.monotonic()
         if now >= deadline:
             return WaitResult(st, True)
-        step_until = min(deadline, now + poll_s)
-        while time.monotonic() < step_until:
-            if interrupted():
-                raise WaitInterrupted()
-            await asyncio.sleep(min(INTERRUPT_CHECK_S, max(0.0, step_until - time.monotonic())))
+        await pause(min(deadline, now + poll_s))
 
 
 def left_open_line(slug: Any) -> str:
@@ -531,14 +568,22 @@ def notes_text(run: "RunResults") -> str:
     return "\n".join(line for _, _, line in rows)
 
 
-def meta_json(run: "RunResults", indices: Sequence[int]) -> str:
-    """§4.6 ``accepted_meta``: a JSON array of those cards' ``meta``."""
+def meta_json(run: "RunResults", indices: Sequence[int], default_index: bool = True) -> str:
+    """§4.6 ``accepted_meta``: a JSON array of those cards' ``meta``, each
+    with ``position``, its position in this node's batch (what
+    ``accepted_indices`` lists). ``index`` is never overwritten: it is the
+    index in the batch Send was given (the sampler's), what Latent From Batch
+    needs to reproduce a keeper; in Load, whose batch is every run one after
+    another, the two differ. ``default_index`` (Wait, where they agree) fills
+    a missing ``index`` with the position; Load leaves it missing."""
     metas = []
     for i in indices:
         card = run.cards[i]
         meta = dict(card.get("meta") or {}) if card else {}
-        meta.setdefault("index", i)
+        if default_index:
+            meta.setdefault("index", i)
         meta.setdefault("ref", run.refs[i])
+        meta["position"] = i
         metas.append(meta)
     return json.dumps(metas, indent=1)
 
@@ -594,6 +639,34 @@ def slice_images(images: Any, indices: Sequence[int]) -> Any:
     return images.index_select(0, idx)
 
 
+def check_wait_inputs(
+    mode: Optional[str],
+    images: Any,
+    latent: Optional[Dict[str, Any]] = None,
+    images_b: Any = None,
+    refs: Optional[Sequence[Any]] = None,
+) -> None:
+    """What the split will need, checked before any upload or poll, so a
+    miswired node fails at once and not after the whole wait: the batch
+    matches the handle's cards; pair mode has ``images_b`` of the same batch
+    size; a wired latent has at least as many samples as ``images``."""
+    n = batch_size(images)
+    if refs is not None and n != len(refs):
+        raise ValueError(f"the queue handle has {len(refs)} cards for {n} images: wire the batch Send was given")
+    if mode == "pair":
+        if images_b is None:
+            raise ValueError("pair mode: wire images_b (the B batch, same batch size as images) "
+                             "so the winners can come from either side")
+        if batch_size(images_b) != n:
+            raise ValueError(f"pair mode: images_b has {batch_size(images_b)} images for {n} in images; "
+                             f"one card per index needs the same batch size")
+    if latent is not None:
+        samples = latent.get("samples") if isinstance(latent, dict) else None
+        if samples is not None and int(samples.shape[0]) < n:
+            raise ValueError(f"latent has {int(samples.shape[0])} samples for {n} images: "
+                             f"wire the latent of the same batch (or leave latent unwired)")
+
+
 def pick_images(images: Any, images_b: Any, indices: Sequence[int], sides: Sequence[str]) -> Any:
     """Pair mode: index ``i`` from ``images`` when its side is ``a``, from
     ``images_b`` when ``b``."""
@@ -645,8 +718,10 @@ def split_outputs(
     images: Any,
     latent: Optional[Dict[str, Any]] = None,
     images_b: Any = None,
+    default_index: bool = True,
 ) -> List[Any]:
-    """The nine Wait sockets of §4.6, in order. An empty ``accepted`` or
+    """The nine Wait sockets of §4.6, in order. ``default_index``: see
+    ``meta_json`` (Load passes False). An empty ``accepted`` or
     ``rejected`` (and ``accepted_latent`` / ``accepted_indices`` with it) is a
     silent blocker on that socket only."""
     n = batch_size(images)
@@ -685,7 +760,7 @@ def split_outputs(
         meta: Any = blocker()
         say(option_line(run))
     else:
-        meta = meta_json(run, s.accepted)
+        meta = meta_json(run, s.accepted, default_index)
     return [
         accepted,
         rejected,
@@ -761,32 +836,57 @@ def _write_text(path: str, text: str) -> None:
         fh.write(text)
 
 
-def write_run_folder_sync(client: TrainyThingClient, slug: str, mode: str, root: str) -> Dict[str, Any]:
+def _daemon_wrote(path: str, since: float) -> bool:
+    """``results?out=`` said it wrote ``path``: is the file really here, and
+    new? A "local" daemon on another filesystem (Docker on 127.0.0.1) writes
+    into its own. One second of slack for coarse file clocks; the old file
+    is removed before the call, so a stale one cannot pass."""
+    try:
+        return os.path.getmtime(path) >= since - 1.0
+    except OSError:
+        return False
+
+
+def write_run_folder_sync(client: TrainyThingClient, queue_id: str, slug: str, mode: str, root: str) -> Dict[str, Any]:
     """``<root>/<slug>/``: ``results.json`` + ``blobs/`` (written by the daemon
-    via ``results?out=`` when it is local; else, or when that fails, the
+    via ``results?out=`` when it is local and the file shows up here; else the
     unpacked ``results/bundle.zip``), ``labels.jsonl``, ``summary.md``, and
-    ``preferences.jsonl`` in pair mode. ``out`` is absolute: the daemon
+    ``preferences.jsonl`` in pair mode. Every query is by ``queue_id``, so a
+    slug renamed on the dashboard during the wait does not break it; the
+    folder keeps the name the run knew. ``out`` is absolute: the daemon
     resolves it against its own cwd otherwise."""
     folder = os.path.abspath(os.path.join(root, slug))
     os.makedirs(folder, exist_ok=True)
     how = "bundle"
     if is_local_url(client.base_url):
+        target = os.path.join(folder, "results.json")
         try:
-            client.results(slug, "json", out=os.path.join(folder, "results.json"))
-            how = "local"
+            os.remove(target)
+        except FileNotFoundError:
+            pass
+        started = time.time()
+        try:
+            client.results(queue_id, "json", out=target)
+            if _daemon_wrote(target, started):
+                how = "local"
+            else:
+                say(f"{slug}: the daemon wrote results.json somewhere this machine cannot see "
+                    f"(another filesystem?); reading the bundle")
         except ClientError as err:
             log.info("trainything: results --out failed (%s); reading the bundle", err)
     if how == "bundle":
-        client.bundle(slug, folder)
-    _write_text(os.path.join(folder, "labels.jsonl"), str(client.results(slug, "labels")))
-    _write_text(os.path.join(folder, "summary.md"), str(client.results(slug, "summary")))
+        client.bundle(queue_id, folder)
+    _write_text(os.path.join(folder, "labels.jsonl"), str(client.results(queue_id, "labels")))
+    _write_text(os.path.join(folder, "summary.md"), str(client.results(queue_id, "summary")))
     if mode == "pair":
-        _write_text(os.path.join(folder, "preferences.jsonl"), str(client.results(slug, "preferences")))
+        _write_text(os.path.join(folder, "preferences.jsonl"), str(client.results(queue_id, "preferences")))
     return {"folder": folder, "how": how}
 
 
-async def write_run_folder(client: AsyncTrainyThingClient, slug: str, mode: str, root: Optional[str] = None) -> Dict[str, Any]:
-    return await asyncio.to_thread(write_run_folder_sync, client.sync, slug, mode, root or output_root())
+async def write_run_folder(
+    client: AsyncTrainyThingClient, queue_id: str, slug: str, mode: str, root: Optional[str] = None
+) -> Dict[str, Any]:
+    return await asyncio.to_thread(write_run_folder_sync, client.sync, queue_id, slug, mode, root or output_root())
 
 
 # ---------------------------------------------------------------------------
@@ -810,11 +910,13 @@ async def wait_and_split(
     blocked)``, where ``blocked`` means a timeout with ``block``, every socket
     a silent blocker, and a caller with more sockets blocks them too. On
     ComfyUI's interrupt (or task cancellation) the queue is left open, the
-    console says so with the slug, and the interrupt propagates."""
+    console says so with the slug, and the interrupt propagates.
+
+    The inputs are checked before the first poll (``check_wait_inputs``).
+    The split is computed before the run's folder is written, and the folder
+    is best effort: a failure there is one console line, never a lost wait."""
     slug = handle.get("slug")
-    n = batch_size(images)
-    if n != len(handle.get("refs") or []):
-        raise ValueError(f"the queue handle has {len(handle.get('refs') or [])} cards for {n} images: wire the batch Send was given")
+    check_wait_inputs(handle.get("mode"), images, latent, images_b, handle.get("refs") or [])
     try:
         waited = await wait_until_done(client, handle, float(timeout_minutes) * 60.0, node_id=node_id, preview=preview)
     except WaitInterrupted:
@@ -827,11 +929,15 @@ async def wait_and_split(
     if waited.timed_out:
         say(f"{slug}: timed out after {timeout_minutes:g} min ({on_timeout}); the queue stays open. {LOAD_LATER}.")
     run = await collect(client, handle)
-    folder = await write_run_folder(client, str(slug), run.mode)
-    say(f"{slug}: {result_line(run)}; wrote {folder['folder']} ({folder['how']})")
-    if waited.timed_out and on_timeout == "block":
-        return blocked_outputs(), True
-    return split_outputs(run, images, latent, images_b), False
+    blocked = waited.timed_out and on_timeout == "block"
+    outs = blocked_outputs() if blocked else split_outputs(run, images, latent, images_b)
+    try:
+        folder = await write_run_folder(client, handle["queue_id"], str(slug), run.mode)
+        wrote = f"wrote {folder['folder']} ({folder['how']})"
+    except Exception as err:  # best effort: the wait is done, the split is computed
+        wrote = f"could not write the run's folder ({type(err).__name__}: {err}); {LOAD_LATER}"
+    say(f"{slug}: {result_line(run)}; {wrote}")
+    return outs, blocked
 
 
 # ---------------------------------------------------------------------------
@@ -880,18 +986,22 @@ def load_handle(found: Dict[str, Any], base_url: str) -> Dict[str, Any]:
 
 async def load_fingerprint(slug: str) -> str:
     """§4.4: what decides whether ComfyUI may reuse Load's last outputs. The
-    queue's id, card count, judgment count, status and closed time (``/status``
-    and the queue row): it moves when a verdict lands, a card is added, or
-    the queue is closed or reopened, and not otherwise. When the daemon or the
+    queue's id, card count, judgment count, status, closed time (``/status``
+    and the queue row) and ``last_activity_at`` (the queue list's entry: the
+    newest judgment or reviewer visit): it moves when a verdict lands (an
+    undo followed by a new verdict included), a card is added, or the queue
+    is closed or reopened; a reviewer who only opens the link moves it too,
+    which costs one re-read. When the daemon or the
     queue cannot be read, a value that never repeats, so Load runs and reports
     the problem itself. No auto-start here: that is execute's job."""
     try:
         client = await connect_async(auto_start=False, timeout=2.0)
         found = await find_queue_by_slug(client, slug)
         qid = found["queue"]["id"]
-        st = await client.status(qid)
+        st, entries = await asyncio.gather(client.status(qid), client.list_queues())
+        activity = next((e.get("last_activity_at") for e in entries or [] if e.get("queue_id") == qid), None)
         return json.dumps(
-            [qid, st.get("cards"), st.get("judgments"), st.get("status"), found["queue"].get("closed_at")]
+            [qid, st.get("cards"), st.get("judgments"), st.get("status"), found["queue"].get("closed_at"), activity]
         )
     except Exception as err:  # never fail validation; execute says what is wrong
         return f"unreadable {time.time()!r}: {type(err).__name__}"
@@ -1038,7 +1148,7 @@ async def load_queue(
             raise
         if waited.timed_out:
             say(f"{name}: timed out after {timeout_minutes:g} min; loading what is judged (the rest unjudged).")
-    folder = await write_run_folder(client, name, str(handle.get("mode") or "single"), root)
+    folder = await write_run_folder(client, handle["queue_id"], name, str(handle.get("mode") or "single"), root)
     doc, labels_raw, summary_md = await asyncio.to_thread(read_folder, folder["folder"])
     run, skipped = load_run(doc, labels_raw, summary_md, handle.get("mode"))
     for card in skipped:
@@ -1050,7 +1160,7 @@ async def load_queue(
     if resized:
         h, w = int(images.shape[1]), int(images.shape[2])
         say(f"{name}: {resized} image(s) resized to the first card's {w}x{h} (a ComfyUI batch has one size)")
-    outs = split_outputs(run, images, None, images_b)
+    outs = split_outputs(run, images, None, images_b, default_index=False)
     del outs[WAIT_OUTPUTS.index("accepted_latent")]
     say(f"{name}: loaded {len(run.refs)} images, {result_line(run)}; wrote {folder['folder']} ({folder['how']})")
     return outs

@@ -52,3 +52,31 @@ on a CPU ComfyUI 0.39.0 against throwaway daemons):
 - **K4**, packaging: `git clone` into a fresh ComfyUI's `custom_nodes/` lists
   the five nodes; the dataset script. The owner's real-sampler run is open
   (`docs/OWNER-RUN.md`).
+
+**Review fixes** (an independent review of K0–K4; each has a test in
+`tests/test_review_fixes*.py`, details in `docs/V3-NOTES.md`):
+
+1. Wait and Review check `images_b` (pair) and the latent's size before the
+   wait, not after it.
+2. Appending to a queue made elsewhere: another mode is an error; the queue's
+   options stand; a missing `min_reviews` is set from the widget by PATCH so
+   the wait can end; a queue's own `min_reviews` is kept.
+3. The wait retries a daemon that does not answer or answers 5xx (2, 4, 8 …
+   30 s) until the timeout; 401 / 403 / 404 / 409 fail at once.
+4. The split is computed before the run's folder is written; the folder is
+   best effort and read by queue id (a renamed slug no longer breaks it).
+5. Auto-start runs a `trainything` binary on the PATH first, `npx -y
+   trainything list` only without one; the token goes along only with
+   `TRAINYTHING_URL`.
+6. `--disable-metadata` keeps the `prompt` / `workflow` chunks out of the
+   uploaded PNGs.
+7. `public` shares before any upload; a failed tunnel is the local link and
+   a console line, never an error after the cards were added.
+8. `accepted_meta` objects gain `position` (the position in the node's
+   batch); Load leaves `index` as Send wrote it.
+9. A local daemon whose `results?out=` file does not appear here (another
+   filesystem) falls back to the bundle.
+10. Load's fingerprint carries `last_activity_at`: an undo then a new verdict
+    re-runs it.
+11. The results bundle is streamed to a temp file, not read into memory.
+12. Run ids carry a 4-hex random suffix.
