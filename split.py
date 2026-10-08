@@ -152,3 +152,78 @@ def take(batch: Sequence[Any], indices: Sequence[int]) -> List[Any]:
     """The items of ``batch`` at ``indices``, in order (a list helper; a
     tensor is sliced with ``tensor[indices]`` directly)."""
     return [batch[i] for i in indices]
+
+
+# ---------------------------------------------------------------------------
+# Filter (§4.5): labels lines -> indices, knowing nothing about the daemon
+# ---------------------------------------------------------------------------
+
+
+def infer_mode(lines: Sequence[Dict[str, Any]]) -> str:
+    """The mode a labels.jsonl came from, from the lines' shape (the daemon
+    does not write the mode on them): a list verdict is ``select``; a
+    ``counts`` tally is ``choose`` (or ``select`` with nothing chosen yet);
+    an ``a`` / ``b`` verdict is ``pair``; anything else is ``single``. Only
+    ``option`` depends on the difference between choose and select, and it
+    matches a string verdict by equality and a list by inclusion either way."""
+    has_counts = False
+    for line in lines:
+        verdict = line.get("verdict")
+        if isinstance(verdict, list):
+            return "select"
+        if "counts" in line:
+            has_counts = True
+    if has_counts:
+        return "choose"
+    if any(line.get("verdict") in ("a", "b") for line in lines):
+        return "pair"
+    return "single"
+
+
+def line_index(line: Dict[str, Any]) -> Optional[int]:
+    """A line's own batch index, when it carries one (``index``, or
+    ``meta.index``); None otherwise."""
+    for value in (line.get("index"), (line.get("meta") or {}).get("index") if isinstance(line.get("meta"), dict) else None):
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+    return None
+
+
+def order_lines(lines: Sequence[Dict[str, Any]], batch: int) -> List[Dict[str, Any]]:
+    """Line ``i`` is batch index ``i``; when every line carries its own index
+    (``line_index``) and they are exactly ``0..batch-1``, that wins. The line
+    count must equal the batch size."""
+    if len(lines) != batch:
+        raise ValueError(
+            f"labels has {len(lines)} lines for {batch} images: wire the labels and the images "
+            f"from the same Wait, Review or Load (one line per image, in batch order)"
+        )
+    own = [line_index(line) for line in lines]
+    if all(i is not None for i in own) and sorted(own) == list(range(batch)):  # type: ignore[type-var]
+        out: List[Optional[Dict[str, Any]]] = [None] * batch
+        for line, i in zip(lines, own):
+            out[i] = line  # type: ignore[index]
+        return [ln for ln in out if ln is not None]
+    return list(lines)
+
+
+def filter_indices(
+    labels: Union[str, Iterable[Any]],
+    batch: int,
+    rule: str,
+    option_id: Optional[str] = None,
+) -> List[int]:
+    """Filter's rules over a labels.jsonl (§4.5): the batch indices, in order.
+
+    ``accepted`` / ``rejected`` (single: the verdict; pair: every card with a
+    winner, both sets), ``contested``, ``unjudged``, and ``option`` (the cards
+    whose consensus is ``option_id`` in choose, or includes it in select)."""
+    if rule not in RULES:
+        raise ValueError(f"unknown rule: {rule} (want one of {', '.join(RULES)})")
+    if rule == "option" and not (option_id or "").strip():
+        raise ValueError("rule option needs an option_id (one of the queue's option ids)")
+    lines = order_lines(parse_labels(labels), batch)
+    refs = [f"#{i}" for i in range(batch)]
+    keyed = [dict(line, ref=refs[i]) for i, line in enumerate(lines)]
+    split = split_labels(keyed, refs, infer_mode(lines))
+    return split.indices(rule, (option_id or "").strip() or None)

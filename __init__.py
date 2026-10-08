@@ -1,8 +1,8 @@
 """TrainyThing for ComfyUI: send a batch to a phone for review, get the keepers back.
 
 ComfyUI loads this file as the pack's entrypoint and calls ``comfy_entrypoint``
-(V3 node API, ``comfy_api.latest``; see docs/V3-NOTES.md). K1 ships Send, Wait
-and Review (``nodes/``); K2 adds Load and Filter.
+(V3 node API, ``comfy_api.latest``; see docs/V3-NOTES.md): Review, Send, Wait,
+Load and Filter (``nodes/``).
 
 ``comfy_api`` is imported inside the entrypoint so the package also imports
 outside ComfyUI (the tests load it that way).

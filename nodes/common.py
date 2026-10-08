@@ -690,3 +690,225 @@ async def wait_and_split(
     if waited.timed_out and on_timeout == "block":
         return blocked_outputs(), True
     return split_outputs(run, images, latent, images_b), False
+
+
+# ---------------------------------------------------------------------------
+# Load (§4.4): a queue read back by name, images from the blob store
+# ---------------------------------------------------------------------------
+
+#: The outputs of Load, in socket order: Wait's minus ``accepted_latent``.
+LOAD_OUTPUTS = tuple(name for name in WAIT_OUTPUTS if name != "accepted_latent")
+
+
+class QueueNotFound(ValueError):
+    pass
+
+
+async def find_queue_by_slug(client: AsyncTrainyThingClient, slug: str) -> Dict[str, Any]:
+    """The queue by slug or id (as typed, then normalized as the daemon does);
+    ``QueueNotFound`` naming it when the daemon has neither."""
+    from ..cards import normalize_slug
+
+    wanted = (slug or "").strip()
+    if not wanted:
+        raise QueueNotFound("TrainyThing Load needs a slug: the queue's link name (or its id)")
+    tries = [wanted] + [s for s in [normalize_slug(wanted)] if s and s != wanted]
+    for name in tries:
+        found = await client.find_queue(name)
+        if found is not None:
+            return found
+    raise QueueNotFound(f"no TrainyThing queue named {wanted!r} at {client.base_url} (check the slug on the dashboard)")
+
+
+def load_handle(found: Dict[str, Any], base_url: str) -> Dict[str, Any]:
+    """A queue handle (the shape Send makes) for a queue found by name; its
+    ``refs`` are filled in once the cards are read."""
+    queue = found["queue"]
+    return {
+        "base_url": base_url,
+        "slug": queue.get("share_token") or queue.get("id"),
+        "queue_id": queue["id"],
+        "link": found.get("share_url") or found.get("local_url"),
+        "local_url": found.get("local_url"),
+        "share_url": found.get("share_url"),
+        "mode": queue.get("mode"),
+        "refs": [],
+    }
+
+
+async def load_fingerprint(slug: str) -> str:
+    """§4.4: what decides whether ComfyUI may reuse Load's last outputs. The
+    queue's id, card count, judgment count, status and closed time (``/status``
+    and the queue row): it moves when a verdict lands, a card is added, or
+    the queue is closed or reopened, and not otherwise. When the daemon or the
+    queue cannot be read, a value that never repeats, so Load runs and reports
+    the problem itself. No auto-start here: that is execute's job."""
+    try:
+        client = await connect_async(auto_start=False, timeout=2.0)
+        found = await find_queue_by_slug(client, slug)
+        qid = found["queue"]["id"]
+        st = await client.status(qid)
+        return json.dumps(
+            [qid, st.get("cards"), st.get("judgments"), st.get("status"), found["queue"].get("closed_at")]
+        )
+    except Exception as err:  # never fail validation; execute says what is wrong
+        return f"unreadable {time.time()!r}: {type(err).__name__}"
+
+
+def card_items(card: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+    """A card's image items, A side first (one for single, two for pair);
+    None when the card is not all images (text, audio or video the CLI could
+    have added)."""
+    items = list(card.get("items") or [])
+    if not items or len(items) > 2 or any(it.get("kind") != "image" or not it.get("src") for it in items):
+        return None
+    if len(items) == 2:
+        items.sort(key=lambda it: 0 if (it.get("side") == "a" or str(it.get("ref", "")).endswith("-a")) else 1)
+    return items
+
+
+def image_cards(doc: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """``(the image cards in card order, the cards skipped)``."""
+    kept: List[Dict[str, Any]] = []
+    skipped: List[Dict[str, Any]] = []
+    for card in doc.get("cards") or []:
+        (kept if card_items(card) is not None else skipped).append(card)
+    return kept, skipped
+
+
+def blob_path(folder: str, src: str) -> str:
+    """``blobs/<sha><ext>`` (relative, as results.json writes it next to the
+    blobs) or an absolute path, kept inside ``folder`` when relative."""
+    if os.path.isabs(src):
+        return src
+    root = os.path.realpath(folder)
+    path = os.path.realpath(os.path.join(root, src))
+    if os.path.commonpath([root, path]) != root:
+        raise ValueError(f"results.json names a blob outside the folder: {src}")
+    return path
+
+
+def decode_batch(paths: Sequence[str]) -> Tuple[Any, int]:
+    """PNG files -> one IMAGE ``[B, H, W, 3]`` float32 in 0..1, in order.
+    A ComfyUI batch has one size, so any image whose size differs from the
+    first one's is resized to it (bilinear); returns ``(tensor, resized)``."""
+    import numpy as np
+    import torch
+    from PIL import Image
+
+    from ..png import decode_png
+
+    arrays = []
+    size = None
+    resized = 0
+    for path in paths:
+        with open(path, "rb") as fh:
+            arr, _ = decode_png(fh.read())
+        h, w = arr.shape[:2]
+        if size is None:
+            size = (w, h)
+        elif (w, h) != size:
+            img = Image.fromarray(np.clip(arr * 255.0 + 0.5, 0, 255).astype(np.uint8))
+            arr = np.asarray(img.resize(size, Image.BILINEAR)).astype(np.float32) / 255.0
+            resized += 1
+        arrays.append(arr)
+    return torch.from_numpy(np.ascontiguousarray(np.stack(arrays))), resized
+
+
+def read_folder(folder: str) -> Tuple[Dict[str, Any], str, str]:
+    """``(results.json, labels.jsonl, summary.md)`` of a run's folder."""
+    with open(os.path.join(folder, "results.json"), encoding="utf-8") as fh:
+        doc = json.load(fh)
+    with open(os.path.join(folder, "labels.jsonl"), encoding="utf-8") as fh:
+        labels_raw = fh.read()
+    with open(os.path.join(folder, "summary.md"), encoding="utf-8") as fh:
+        summary_md = fh.read()
+    return doc, labels_raw, summary_md
+
+
+def load_run(doc: Dict[str, Any], labels_raw: str, summary_md: str, mode: Optional[str] = None) -> Tuple[RunResults, List[Dict[str, Any]]]:
+    """A whole queue as one run: the image cards in card order are batch
+    indices ``0..B-1`` (cards that are not images are left out of every
+    index). Returns ``(run, skipped cards)``."""
+    kept, skipped = image_cards(doc)
+    refs = [str(c.get("ref")) for c in kept]
+    mode = mode or (doc.get("queue") or {}).get("mode") or "single"
+    lines = run_labels(labels_raw, refs)
+    run = RunResults(
+        mode=mode,
+        refs=refs,
+        split=split_labels(lines, refs, mode),
+        lines=lines,
+        cards=list(kept),
+        summary_md=summary_md,
+        results=doc,
+    )
+    return run, skipped
+
+
+def load_images(run: RunResults, folder: str) -> Tuple[Any, Any, int]:
+    """``(images, images_b or None, resized)``: the A side (or the only image)
+    of every card, and the B side in pair mode, each one batch."""
+    a_paths, b_paths = [], []
+    for card in run.cards:
+        items = card_items(card or {}) or []
+        a_paths.append(blob_path(folder, items[0]["src"]))
+        if len(items) > 1:
+            b_paths.append(blob_path(folder, items[1]["src"]))
+    images, resized = decode_batch(a_paths)
+    images_b = None
+    if b_paths and len(b_paths) == len(a_paths):
+        images_b, more = decode_batch(b_paths)
+        resized += more
+        if tuple(images_b.shape[1:3]) != tuple(images.shape[1:3]):
+            import torch
+
+            images_b = torch.nn.functional.interpolate(
+                images_b.movedim(-1, 1), size=tuple(images.shape[1:3]), mode="bilinear", align_corners=False
+            ).movedim(1, -1).clamp(0, 1)
+    return images, images_b, resized
+
+
+async def load_queue(
+    client: AsyncTrainyThingClient,
+    slug: str,
+    *,
+    wait: bool = False,
+    timeout_minutes: float = DEFAULT_TIMEOUT_MIN,
+    node_id: Optional[str] = None,
+    root: Optional[str] = None,
+) -> List[Any]:
+    """Load's body: find the queue, wait when asked (interruptible, as Wait),
+    write the run's folder, read the cards back from it and split them.
+    Returns the eight Load sockets (``LOAD_OUTPUTS``)."""
+    found = await find_queue_by_slug(client, slug)
+    handle = load_handle(found, client.base_url)
+    name = str(handle["slug"])
+    if wait:
+        try:
+            waited = await wait_until_done(client, handle, float(timeout_minutes) * 60.0, node_id=node_id)
+        except WaitInterrupted:
+            say(left_open_line(name))
+            raise_interrupt()
+            raise
+        except asyncio.CancelledError:
+            say(left_open_line(name))
+            raise
+        if waited.timed_out:
+            say(f"{name}: timed out after {timeout_minutes:g} min; loading what is judged (the rest unjudged).")
+    folder = await write_run_folder(client, name, str(handle.get("mode") or "single"), root)
+    doc, labels_raw, summary_md = await asyncio.to_thread(read_folder, folder["folder"])
+    run, skipped = load_run(doc, labels_raw, summary_md, handle.get("mode"))
+    for card in skipped:
+        kinds = ",".join(sorted({str(it.get("kind")) for it in card.get("items") or []})) or "empty"
+        say(f"{name}: skipped card {card.get('ref')} ({kinds}): Load returns image cards only")
+    if not run.refs:
+        raise ValueError(f"queue {name} has no image cards to load")
+    images, images_b, resized = await asyncio.to_thread(load_images, run, folder["folder"])
+    if resized:
+        h, w = int(images.shape[1]), int(images.shape[2])
+        say(f"{name}: {resized} image(s) resized to the first card's {w}x{h} (a ComfyUI batch has one size)")
+    outs = split_outputs(run, images, None, images_b)
+    del outs[WAIT_OUTPUTS.index("accepted_latent")]
+    say(f"{name}: loaded {len(run.refs)} images, {result_line(run)}; wrote {folder['folder']} ({folder['how']})")
+    return outs

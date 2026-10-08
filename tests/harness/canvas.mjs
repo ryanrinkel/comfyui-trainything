@@ -2,6 +2,7 @@
 // it):
 //   convert <comfy> <in.json> <out.json>    an API prompt -> the canvas workflow the frontend saves
 //   probe   <comfy> <workflow.json>         print the Batch Images order the frontend would queue
+//   prompt  <comfy> <workflow.json> <out.json>  the API prompt the frontend would queue for a workflow
 //   shoot   <comfy> <workflow.json> <daemon> <slug> <shots dir>
 //                                            load a workflow, press Queue, screenshot the Review
 //                                            node while it waits and after a scripted review
@@ -139,7 +140,22 @@ async function probe(comfy, workflowFile) {
   }
   await browser.close();
 }
+// prompt <comfy> <workflow.json> <out.json>: load a canvas workflow and write
+// the API prompt Queue would send (proves the workflow loads in the frontend)
+async function prompt(comfy, workflowFile, output) {
+  const { browser, page } = await open(comfy);
+  const wf = JSON.parse(readFileSync(workflowFile, 'utf8'));
+  const out = await page.evaluate(async (wf) => {
+    await window.app.loadGraphData(wf);
+    const p = await window.app.graphToPrompt();
+    return p.output;
+  }, wf);
+  writeFileSync(output, JSON.stringify(out, null, 1) + '\n');
+  console.log(`wrote ${output} (${Object.keys(out).length} nodes)`);
+  await browser.close();
+}
+
 const [cmd, ...args] = process.argv.slice(2);
-const commands = { convert, shoot, probe };
+const commands = { convert, shoot, probe, prompt };
 if (!commands[cmd]) throw new Error(`unknown command ${cmd} (want ${Object.keys(commands).join(', ')})`);
 await commands[cmd](...args);

@@ -60,6 +60,7 @@ __all__ = [
     "resolve_base_url",
     "resolve_token",
     "is_local_url",
+    "FORCE_REMOTE_ENV",
     "no_daemon_message",
     "connect",
     "connect_async",
@@ -181,8 +182,18 @@ def resolve_token(token: Optional[str] = None, home: Optional[str] = None) -> Op
     return None
 
 
+#: Test-only: when set to ``1``, ``is_local_url`` says no for every URL, so a
+#: daemon on 127.0.0.1 is treated as remote (no auto-start; the run's folder
+#: and Load read ``results/bundle.zip`` instead of asking the daemon to write
+#: files). The K2 gate uses it for "remote in all but name".
+FORCE_REMOTE_ENV = "TRAINYTHING_FORCE_REMOTE"
+
+
 def is_local_url(url: str) -> bool:
-    """Auto-start only makes sense for a server we could spawn (``isLocalUrl``)."""
+    """Auto-start only makes sense for a server we could spawn (``isLocalUrl``).
+    ``TRAINYTHING_FORCE_REMOTE=1`` (test-only) makes every URL remote."""
+    if os.environ.get(FORCE_REMOTE_ENV) == "1":
+        return False
     try:
         parsed = urllib.parse.urlsplit(url)
         host = (parsed.hostname or "").lower()

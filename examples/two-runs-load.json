@@ -1,70 +1,109 @@
 {
- "last_node_id": 4,
- "last_link_id": 3,
+ "id": "d5eeb0a2-b3f6-4466-b6d2-103b517632a8",
+ "revision": 0,
+ "last_node_id": 6,
+ "last_link_id": 6,
  "nodes": [
   {
    "id": 1,
    "type": "TrainyThingLoad",
-   "title": "TrainyThing Load",
    "pos": [
-    0,
-    0
+    100,
+    130
    ],
    "size": [
-    320,
-    330
+    270,
+    246
    ],
    "flags": {},
    "order": 0,
    "mode": 0,
-   "inputs": [],
+   "inputs": [
+    {
+     "localized_name": "slug",
+     "name": "slug",
+     "type": "STRING",
+     "widget": {
+      "name": "slug"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "wait",
+     "name": "wait",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "wait"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "timeout_minutes",
+     "name": "timeout_minutes",
+     "type": "FLOAT",
+     "widget": {
+      "name": "timeout_minutes"
+     },
+     "link": null
+    }
+   ],
    "outputs": [
     {
+     "localized_name": "accepted",
      "name": "accepted",
+     "type": "IMAGE",
+     "links": null
+    },
+    {
+     "localized_name": "rejected",
+     "name": "rejected",
+     "type": "IMAGE",
+     "links": null
+    },
+    {
+     "localized_name": "images",
+     "name": "images",
      "type": "IMAGE",
      "links": [
       1
      ]
     },
     {
-     "name": "rejected",
-     "type": "IMAGE",
-     "links": null
-    },
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "links": null
-    },
-    {
+     "localized_name": "labels",
      "name": "labels",
-     "type": "STRING",
-     "links": null
-    },
-    {
-     "name": "summary",
      "type": "STRING",
      "links": [
       2
      ]
     },
     {
+     "localized_name": "summary",
+     "name": "summary",
+     "type": "STRING",
+     "links": [
+      4
+     ]
+    },
+    {
+     "localized_name": "notes",
      "name": "notes",
      "type": "STRING",
      "links": null
     },
     {
+     "localized_name": "accepted_meta",
      "name": "accepted_meta",
      "type": "STRING",
      "links": [
-      3
+      5
      ]
     },
     {
+     "localized_name": "accepted_indices",
      "name": "accepted_indices",
+     "shape": 6,
      "type": "INT",
-     "links": null,
-     "shape": 6
+     "links": null
     }
    ],
    "properties": {
@@ -74,118 +113,275 @@
     "sprites-08",
     false,
     45
-   ]
+   ],
+   "widgets_values_named": {
+    "slug": "sprites-08",
+    "wait": false,
+    "timeout_minutes": 45
+   }
   },
   {
    "id": 2,
-   "type": "SaveImage",
-   "title": "Save the keepers",
+   "type": "TrainyThingFilter",
    "pos": [
-    420,
-    0
+    470,
+    130
    ],
    "size": [
-    320,
-    300
+    270,
+    142
    ],
    "flags": {},
    "order": 1,
    "mode": 0,
    "inputs": [
     {
+     "localized_name": "images",
      "name": "images",
      "type": "IMAGE",
      "link": 1
+    },
+    {
+     "localized_name": "labels",
+     "name": "labels",
+     "type": "STRING",
+     "link": 2
+    },
+    {
+     "localized_name": "latent",
+     "name": "latent",
+     "shape": 7,
+     "type": "LATENT",
+     "link": null
+    },
+    {
+     "localized_name": "rule",
+     "name": "rule",
+     "type": "COMBO",
+     "widget": {
+      "name": "rule"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "option_id",
+     "name": "option_id",
+     "type": "STRING",
+     "widget": {
+      "name": "option_id"
+     },
+     "link": null
     }
    ],
-   "outputs": [],
+   "outputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "links": [
+      3
+     ]
+    },
+    {
+     "localized_name": "latent",
+     "name": "latent",
+     "type": "LATENT",
+     "links": null
+    },
+    {
+     "localized_name": "indices",
+     "name": "indices",
+     "shape": 6,
+     "type": "INT",
+     "links": null
+    },
+    {
+     "localized_name": "count",
+     "name": "count",
+     "type": "INT",
+     "links": [
+      6
+     ]
+    }
+   ],
+   "title": "TrainyThing Filter (accepted)",
    "properties": {
-    "Node name for S&R": "SaveImage"
+    "Node name for S&R": "TrainyThingFilter"
    },
    "widgets_values": [
-    "trainything/run2-keepers"
-   ]
+    "accepted",
+    ""
+   ],
+   "widgets_values_named": {
+    "rule": "accepted",
+    "option_id": ""
+   }
   },
   {
    "id": 3,
-   "type": "PreviewAny",
-   "title": "Summary (rewrite the prompt from the notes)",
+   "type": "SaveImage",
    "pos": [
-    420,
-    340
+    840,
+    130
    ],
    "size": [
-    420,
-    260
+    270,
+    58
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "link": 3
+    },
+    {
+     "localized_name": "filename_prefix",
+     "name": "filename_prefix",
+     "type": "STRING",
+     "widget": {
+      "name": "filename_prefix"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "title": "Save the keepers (stands in for VAE Encode -> KSampler)",
+   "properties": {},
+   "widgets_values": [
+    "trainything/run2-keepers"
+   ],
+   "widgets_values_named": {
+    "filename_prefix": "trainything/run2-keepers"
+   }
+  },
+  {
+   "id": 4,
+   "type": "PreviewAny",
+   "pos": [
+    470,
+    402
+   ],
+   "size": [
+    210,
+    122
    ],
    "flags": {},
    "order": 2,
    "mode": 0,
    "inputs": [
     {
+     "localized_name": "source",
      "name": "source",
      "type": "*",
-     "link": 2
+     "link": 4
     }
    ],
    "outputs": [
     {
+     "localized_name": "STRING",
      "name": "STRING",
      "type": "STRING",
      "links": null
     }
    ],
+   "title": "Summary (rewrite the prompt from the notes)",
    "properties": {
     "Node name for S&R": "PreviewAny"
    },
-   "widgets_values": [
-    null,
-    false
-   ]
+   "widgets_values": [],
+   "widgets_values_named": {}
   },
   {
-   "id": 4,
+   "id": 5,
    "type": "PreviewAny",
-   "title": "Keepers' meta (seeds, prompts)",
    "pos": [
-    420,
-    640
+    470,
+    654
    ],
    "size": [
-    420,
-    260
+    210,
+    122
    ],
    "flags": {},
    "order": 3,
    "mode": 0,
    "inputs": [
     {
+     "localized_name": "source",
      "name": "source",
      "type": "*",
-     "link": 3
+     "link": 5
     }
    ],
    "outputs": [
     {
+     "localized_name": "STRING",
      "name": "STRING",
      "type": "STRING",
      "links": null
     }
    ],
+   "title": "Keepers' meta (seeds, prompts)",
    "properties": {
     "Node name for S&R": "PreviewAny"
    },
-   "widgets_values": [
-    null,
-    false
-   ]
+   "widgets_values": [],
+   "widgets_values_named": {}
+  },
+  {
+   "id": 6,
+   "type": "PreviewAny",
+   "pos": [
+    840,
+    318
+   ],
+   "size": [
+    210,
+    122
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "source",
+     "name": "source",
+     "type": "*",
+     "link": 6
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "STRING",
+     "name": "STRING",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "title": "How many keepers",
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "widgets_values_named": {}
   }
  ],
  "links": [
   [
    1,
    1,
-   0,
+   2,
    2,
    0,
    "IMAGE"
@@ -193,28 +389,52 @@
   [
    2,
    1,
-   4,
    3,
-   0,
+   2,
+   1,
    "STRING"
   ],
   [
    3,
+   2,
+   0,
+   3,
+   0,
+   "IMAGE"
+  ],
+  [
+   4,
    1,
-   6,
+   4,
    4,
    0,
    "STRING"
+  ],
+  [
+   5,
+   1,
+   6,
+   5,
+   0,
+   "STRING"
+  ],
+  [
+   6,
+   2,
+   3,
+   6,
+   0,
+   "INT"
   ]
  ],
  "groups": [],
  "config": {},
  "extra": {
   "ds": {
-   "scale": 1,
+   "scale": 0.9,
    "offset": [
-    40,
-    40
+    416,
+    110
    ]
   }
  },

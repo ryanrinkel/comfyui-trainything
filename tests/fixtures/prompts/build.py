@@ -7,6 +7,10 @@ Each output of the TrainyThing node goes to something whose ``ui`` lands in
 ``/history``: Save Image for the image sockets, Save Latent for the latent,
 Preview as Text (core's ``PreviewAny``) for the strings and the index list.
 The tests patch ``slug``, ``labels``, ``timeout_minutes`` and ``on_timeout``.
+
+K2 adds ``send`` (Send only, the batch also saved as it went in, so Load's
+images can be compared with it) and ``load-filter`` (Load, every socket
+observed, and one Filter per rule over Load's images and labels).
 """
 
 import json
@@ -92,7 +96,47 @@ def send_pair():
     return g
 
 
+def send():
+    """Send only (§5.2 run 1), and Save Image of the batch Send was given."""
+    g = {}
+    sources(g, latent=False)
+    g["20"] = {"class_type": "TrainyThingSend", "inputs": {"images": ["13", 0], **dict(SEND, slug="k2-send")}}
+    g["42"] = {"class_type": "SaveImage", "inputs": {"images": ["13", 0], "filename_prefix": "k2/sent"}}
+    return g
+
+
+FILTER_RULES = {"80": ("accepted", ""), "81": ("rejected", ""), "82": ("unjudged", ""), "83": ("option", "hair"),
+                "84": ("contested", "")}
+
+
+def load_filter():
+    """§5.2 run 2: Load by slug, every socket observed; Filter per rule over
+    Load's images and labels (80 also slices a latent: EmptyLatentImage 79,
+    whose batch_size the tests set to the queue's size). Per Filter 8k:
+    Save Image 9k, Preview as Text of indices 10k and count 11k."""
+    g = {}
+    g["70"] = {"class_type": "TrainyThingLoad", "inputs": {"slug": "k2-send", "wait": False, "timeout_minutes": 45.0}}
+    g["71"] = {"class_type": "SaveImage", "inputs": {"images": ["70", 2], "filename_prefix": "k2/load_images"}}
+    g["72"] = {"class_type": "SaveImage", "inputs": {"images": ["70", 0], "filename_prefix": "k2/load_accepted"}}
+    g["73"] = {"class_type": "SaveImage", "inputs": {"images": ["70", 1], "filename_prefix": "k2/load_rejected"}}
+    for nid, slot in (("74", 3), ("75", 4), ("76", 5), ("77", 6), ("78", 7)):  # labels summary notes meta indices
+        g[nid] = {"class_type": "PreviewAny", "inputs": {"source": ["70", slot]}}
+    g["79"] = {"class_type": "EmptyLatentImage", "inputs": {"width": 64, "height": 64, "batch_size": 12}}
+    for nid, (rule, option) in FILTER_RULES.items():
+        k = nid[1]
+        inputs = {"images": ["70", 2], "labels": ["70", 3], "rule": rule, "option_id": option}
+        if nid == "80":
+            inputs["latent"] = ["79", 0]
+        g[nid] = {"class_type": "TrainyThingFilter", "inputs": inputs}
+        g[f"9{k}"] = {"class_type": "SaveImage", "inputs": {"images": [nid, 0], "filename_prefix": f"k2/filter_{rule}"}}
+        g[f"10{k}"] = {"class_type": "PreviewAny", "inputs": {"source": [nid, 2]}}
+        g[f"11{k}"] = {"class_type": "PreviewAny", "inputs": {"source": [nid, 3]}}
+    g["120"] = {"class_type": "SaveLatent", "inputs": {"samples": ["80", 1], "filename_prefix": "k2/filter_latent"}}
+    return g
+
+
 if __name__ == "__main__":
-    for name, fn in {"gate": gate, "send-wait": send_wait, "send-pair": send_pair}.items():
+    for name, fn in {"gate": gate, "send-wait": send_wait, "send-pair": send_pair, "send": send,
+                     "load-filter": load_filter}.items():
         (HERE / f"{name}.json").write_text(json.dumps(fn(), indent=1) + "\n")
         print(f"wrote {name}.json")

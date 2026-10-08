@@ -102,7 +102,7 @@ def test_v3_api_facts():
         "progress_bar": True,
         "node_output_block": True,
         "extension": True,
-        "node_list": ["TrainyThingReview", "TrainyThingSend", "TrainyThingWait"],
+        "node_list": ["TrainyThingFilter", "TrainyThingLoad", "TrainyThingReview", "TrainyThingSend", "TrainyThingWait"],
     }
 
 

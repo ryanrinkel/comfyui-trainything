@@ -86,4 +86,20 @@ def ab_pair():
     return g
 
 
-EXAMPLES = {"gate": gate, "two-runs-send": two_runs_send, "ab-pair": ab_pair}
+def two_runs_load():
+    """§5.2 run 2: Load reads sprites-08 back; Filter accepted -> the keepers
+    (Save Image stands in for VAE Encode -> KSampler); the summary and the
+    keepers' meta shown, to rewrite the prompt and reuse the seeds."""
+    g = {}
+    g["1"] = {"class_type": "TrainyThingLoad", "inputs": {"slug": "sprites-08", "wait": False, "timeout_minutes": 45.0},
+              "_meta": {"title": "TrainyThing Load"}}
+    g["2"] = {"class_type": "TrainyThingFilter", "inputs": {"images": ["1", 2], "labels": ["1", 3], "rule": "accepted",
+              "option_id": ""}, "_meta": {"title": "TrainyThing Filter (accepted)"}}
+    _save(g, 3, ["2", 0], "trainything/run2-keepers", "Save the keepers (stands in for VAE Encode -> KSampler)")
+    _show(g, 4, ["1", 4], "Summary (rewrite the prompt from the notes)")
+    _show(g, 5, ["1", 6], "Keepers' meta (seeds, prompts)")
+    _show(g, 6, ["2", 3], "How many keepers")
+    return g
+
+
+EXAMPLES = {"gate": gate, "two-runs-send": two_runs_send, "two-runs-load": two_runs_load, "ab-pair": ab_pair}

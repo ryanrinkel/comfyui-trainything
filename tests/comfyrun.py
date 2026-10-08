@@ -30,7 +30,8 @@ def load_prompt(name: str) -> Dict[str, Any]:
 
 
 class Comfy:
-    def __init__(self, root: Path, daemon: Any, python: str = sys.executable) -> None:
+    def __init__(self, root: Path, daemon: Any, python: str = sys.executable,
+                 extra_env: Optional[Dict[str, str]] = None) -> None:
         self.root = root
         self.input = root / "input"
         self.output = root / "output"
@@ -49,6 +50,7 @@ class Comfy:
         env["TRAINYTHING_TOKEN"] = daemon.token
         env["TRAINYTHING_HOME"] = str(daemon.home)
         env["PYTHONUNBUFFERED"] = "1"
+        env.update(extra_env or {})
         self._fh = open(self.log, "w")
         self.proc = subprocess.Popen(
             [python, "main.py", "--cpu", "--port", str(self.port), "--listen", "127.0.0.1", "--disable-auto-launch",
