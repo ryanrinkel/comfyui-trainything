@@ -1,8 +1,8 @@
 {
- "id": "6a83b070-fab2-43f2-9840-4cfb052af31e",
+ "id": "ac0e5ccd-119d-495a-8d48-e124f79418ea",
  "revision": 0,
  "last_node_id": 63,
- "last_link_id": 28,
+ "last_link_id": 30,
  "nodes": [
   {
    "id": 1,
@@ -1076,7 +1076,9 @@
      "localized_name": "rejected",
      "name": "rejected",
      "type": "IMAGE",
-     "links": null
+     "links": [
+      16
+     ]
     },
     {
      "localized_name": "accepted_latent",
@@ -1101,14 +1103,16 @@
      "name": "summary",
      "type": "STRING",
      "links": [
-      16
+      18
      ]
     },
     {
      "localized_name": "notes",
      "name": "notes",
      "type": "STRING",
-     "links": null
+     "links": [
+      17
+     ]
     },
     {
      "localized_name": "accepted_meta",
@@ -1216,7 +1220,7 @@
      "links": null
     }
    ],
-   "title": "Save the winners",
+   "title": "Save the winners (A or B)",
    "properties": {},
    "widgets_values": [
     "trainything/ab-winners"
@@ -1226,25 +1230,73 @@
    }
   },
   {
-   "id": 33,
-   "type": "PreviewAny",
+   "id": 31,
+   "type": "SaveImage",
    "pos": [
     1345.6802734375,
     318
    ],
    "size": [
-    210,
-    122
+    270,
+    58
    ],
    "flags": {},
    "order": 28,
    "mode": 0,
    "inputs": [
     {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "link": 16
+    },
+    {
+     "localized_name": "filename_prefix",
+     "name": "filename_prefix",
+     "type": "STRING",
+     "widget": {
+      "name": "filename_prefix"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "title": "Save the losers",
+   "properties": {},
+   "widgets_values": [
+    "trainything/ab-losers"
+   ],
+   "widgets_values_named": {
+    "filename_prefix": "trainything/ab-losers"
+   }
+  },
+  {
+   "id": 32,
+   "type": "PreviewAny",
+   "pos": [
+    1345.6802734375,
+    758
+   ],
+   "size": [
+    210,
+    122
+   ],
+   "flags": {},
+   "order": 30,
+   "mode": 0,
+   "inputs": [
+    {
      "localized_name": "source",
      "name": "source",
      "type": "*",
-     "link": 16
+     "link": 17
     }
    ],
    "outputs": [
@@ -1255,7 +1307,44 @@
      "links": null
     }
    ],
-   "title": "Summary",
+   "title": "Notes (with the side chosen)",
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "widgets_values_named": {}
+  },
+  {
+   "id": 33,
+   "type": "PreviewAny",
+   "pos": [
+    1345.6802734375,
+    506
+   ],
+   "size": [
+    210,
+    122
+   ],
+   "flags": {},
+   "order": 29,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "source",
+     "name": "source",
+     "type": "*",
+     "link": 18
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "STRING",
+     "name": "STRING",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "title": "Summary (preferences.jsonl is in output/trainything/sprites-ab/)",
    "properties": {
     "Node name for S&R": "PreviewAny"
    },
@@ -1302,7 +1391,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      17
+      19
      ]
     },
     {
@@ -1317,11 +1406,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s012.png",
+    "s007.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s012.png",
+    "image": "s007.png",
     "upload": "image"
    }
   },
@@ -1365,7 +1454,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      18
+      20
      ]
     },
     {
@@ -1380,11 +1469,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s011.png",
+    "s008.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s011.png",
+    "image": "s008.png",
     "upload": "image"
    }
   },
@@ -1428,7 +1517,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      19
+      21
      ]
     },
     {
@@ -1443,11 +1532,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s010.png",
+    "s009.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s010.png",
+    "image": "s009.png",
     "upload": "image"
    }
   },
@@ -1491,7 +1580,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      20
+      22
      ]
     },
     {
@@ -1506,11 +1595,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s009.png",
+    "s010.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s009.png",
+    "image": "s010.png",
     "upload": "image"
    }
   },
@@ -1554,7 +1643,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      21
+      23
      ]
     },
     {
@@ -1569,11 +1658,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s008.png",
+    "s011.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s008.png",
+    "image": "s011.png",
     "upload": "image"
    }
   },
@@ -1617,7 +1706,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      22
+      24
      ]
     },
     {
@@ -1632,11 +1721,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s007.png",
+    "s012.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s007.png",
+    "image": "s012.png",
     "upload": "image"
    }
   },
@@ -1680,7 +1769,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      23
+      25
      ]
     },
     {
@@ -1695,11 +1784,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s006.png",
+    "s001.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s006.png",
+    "image": "s001.png",
     "upload": "image"
    }
   },
@@ -1743,7 +1832,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      24
+      26
      ]
     },
     {
@@ -1758,11 +1847,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s005.png",
+    "s002.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s005.png",
+    "image": "s002.png",
     "upload": "image"
    }
   },
@@ -1806,7 +1895,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      25
+      27
      ]
     },
     {
@@ -1821,11 +1910,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s004.png",
+    "s003.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s004.png",
+    "image": "s003.png",
     "upload": "image"
    }
   },
@@ -1869,7 +1958,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      26
+      28
      ]
     },
     {
@@ -1884,11 +1973,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s003.png",
+    "s004.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s003.png",
+    "image": "s004.png",
     "upload": "image"
    }
   },
@@ -1932,7 +2021,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      27
+      29
      ]
     },
     {
@@ -1947,11 +2036,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s002.png",
+    "s005.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s002.png",
+    "image": "s005.png",
     "upload": "image"
    }
   },
@@ -1995,7 +2084,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      28
+      30
      ]
     },
     {
@@ -2010,11 +2099,11 @@
     "Node name for S&R": "LoadImage"
    },
    "widgets_values": [
-    "s001.png",
+    "s006.png",
     "image"
    ],
    "widgets_values_named": {
-    "image": "s001.png",
+    "image": "s006.png",
     "upload": "image"
    }
   },
@@ -2037,84 +2126,84 @@
      "localized_name": "image0",
      "name": "images.image0",
      "type": "IMAGE",
-     "link": 17
+     "link": 19
     },
     {
      "localized_name": "image1",
      "name": "images.image1",
      "shape": 7,
      "type": "IMAGE",
-     "link": 18
+     "link": 20
     },
     {
      "localized_name": "image2",
      "name": "images.image2",
      "shape": 7,
      "type": "IMAGE",
-     "link": 19
+     "link": 21
     },
     {
      "localized_name": "image3",
      "name": "images.image3",
      "shape": 7,
      "type": "IMAGE",
-     "link": 20
+     "link": 22
     },
     {
      "localized_name": "image4",
      "name": "images.image4",
      "shape": 7,
      "type": "IMAGE",
-     "link": 21
+     "link": 23
     },
     {
      "localized_name": "image5",
      "name": "images.image5",
      "shape": 7,
      "type": "IMAGE",
-     "link": 22
+     "link": 24
     },
     {
      "localized_name": "image6",
      "name": "images.image6",
      "shape": 7,
      "type": "IMAGE",
-     "link": 23
+     "link": 25
     },
     {
      "localized_name": "image7",
      "name": "images.image7",
      "shape": 7,
      "type": "IMAGE",
-     "link": 24
+     "link": 26
     },
     {
      "localized_name": "image8",
      "name": "images.image8",
      "shape": 7,
      "type": "IMAGE",
-     "link": 25
+     "link": 27
     },
     {
      "localized_name": "image9",
      "name": "images.image9",
      "shape": 7,
      "type": "IMAGE",
-     "link": 26
+     "link": 28
     },
     {
      "localized_name": "image10",
      "name": "images.image10",
      "shape": 7,
      "type": "IMAGE",
-     "link": 27
+     "link": 29
     },
     {
      "localized_name": "image11",
      "name": "images.image11",
      "shape": 7,
      "type": "IMAGE",
-     "link": 28
+     "link": 30
     },
     {
      "localized_name": "image12",
@@ -2264,13 +2353,29 @@
   [
    16,
    20,
+   1,
+   31,
+   0,
+   "IMAGE"
+  ],
+  [
+   17,
+   20,
+   6,
+   32,
+   0,
+   "STRING"
+  ],
+  [
+   18,
+   20,
    5,
    33,
    0,
    "STRING"
   ],
   [
-   17,
+   19,
    51,
    0,
    63,
@@ -2278,7 +2383,7 @@
    "IMAGE"
   ],
   [
-   18,
+   20,
    52,
    0,
    63,
@@ -2286,7 +2391,7 @@
    "IMAGE"
   ],
   [
-   19,
+   21,
    53,
    0,
    63,
@@ -2294,7 +2399,7 @@
    "IMAGE"
   ],
   [
-   20,
+   22,
    54,
    0,
    63,
@@ -2302,7 +2407,7 @@
    "IMAGE"
   ],
   [
-   21,
+   23,
    55,
    0,
    63,
@@ -2310,7 +2415,7 @@
    "IMAGE"
   ],
   [
-   22,
+   24,
    56,
    0,
    63,
@@ -2318,7 +2423,7 @@
    "IMAGE"
   ],
   [
-   23,
+   25,
    57,
    0,
    63,
@@ -2326,7 +2431,7 @@
    "IMAGE"
   ],
   [
-   24,
+   26,
    58,
    0,
    63,
@@ -2334,7 +2439,7 @@
    "IMAGE"
   ],
   [
-   25,
+   27,
    59,
    0,
    63,
@@ -2342,7 +2447,7 @@
    "IMAGE"
   ],
   [
-   26,
+   28,
    60,
    0,
    63,
@@ -2350,7 +2455,7 @@
    "IMAGE"
   ],
   [
-   27,
+   29,
    61,
    0,
    63,
@@ -2358,7 +2463,7 @@
    "IMAGE"
   ],
   [
-   28,
+   30,
    62,
    0,
    63,

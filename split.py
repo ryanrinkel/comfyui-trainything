@@ -207,17 +207,29 @@ def order_lines(lines: Sequence[Dict[str, Any]], batch: int) -> List[Dict[str, A
     return list(lines)
 
 
-def filter_indices(
+@dataclass
+class Picked:
+    """What Filter keeps: the batch ``indices`` in order, and per index the
+    batch it comes from (``sides``: "a" = images, "b" = images_b; only pair
+    labels under ``accepted`` / ``rejected`` ever say "b")."""
+
+    mode: str
+    indices: List[int]
+    sides: List[str]
+
+
+def filter_pick(
     labels: Union[str, Iterable[Any]],
     batch: int,
     rule: str,
     option_id: Optional[str] = None,
-) -> List[int]:
-    """Filter's rules over a labels.jsonl (§4.5): the batch indices, in order.
+) -> Picked:
+    """Filter's rules over a labels.jsonl (§4.5), with the side of each pick.
 
     ``accepted`` / ``rejected`` (single: the verdict; pair: every card with a
-    winner, both sets), ``contested``, ``unjudged``, and ``option`` (the cards
-    whose consensus is ``option_id`` in choose, or includes it in select)."""
+    winner, both sets, ``sides`` saying which image won or lost),
+    ``contested``, ``unjudged``, and ``option`` (the cards whose consensus is
+    ``option_id`` in choose, or includes it in select)."""
     if rule not in RULES:
         raise ValueError(f"unknown rule: {rule} (want one of {', '.join(RULES)})")
     if rule == "option" and not (option_id or "").strip():
@@ -225,5 +237,23 @@ def filter_indices(
     lines = order_lines(parse_labels(labels), batch)
     refs = [f"#{i}" for i in range(batch)]
     keyed = [dict(line, ref=refs[i]) for i, line in enumerate(lines)]
-    split = split_labels(keyed, refs, infer_mode(lines))
-    return split.indices(rule, (option_id or "").strip() or None)
+    mode = infer_mode(lines)
+    split = split_labels(keyed, refs, mode)
+    indices = split.indices(rule, (option_id or "").strip() or None)
+    if rule == "accepted":
+        sides = list(split.accepted_from)
+    elif rule == "rejected":
+        sides = list(split.rejected_from)
+    else:
+        sides = ["a"] * len(indices)
+    return Picked(mode=mode, indices=indices, sides=sides)
+
+
+def filter_indices(
+    labels: Union[str, Iterable[Any]],
+    batch: int,
+    rule: str,
+    option_id: Optional[str] = None,
+) -> List[int]:
+    """``filter_pick``'s indices only."""
+    return filter_pick(labels, batch, rule, option_id).indices

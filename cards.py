@@ -104,11 +104,23 @@ def parse_meta_input(text: Optional[str], count: int) -> List[Dict[str, Any]]:
     raise ValueError("meta must be a JSON object, an array of objects, or JSON lines")
 
 
-def default_intro(prompt_text: Optional[str]) -> Optional[str]:
-    """§10 question 7: the intro when the widget is left empty."""
+#: §10 question 7, per mode: what the reviewer is asked to do with the prompt.
+INTRO_ASK = {
+    "single": "Reject anything that misses it.",
+    "pair": "Pick the one that matches it better.",
+    "choose": "Pick the answer that fits each one best.",
+    "select": "Tick every answer that applies to each one.",
+}
+
+
+def default_intro(prompt_text: Optional[str], mode: str = "single") -> Optional[str]:
+    """§10 question 7: the intro when the widget is left empty, worded for
+    the mode (single rejects, pair picks one of two, choose picks one answer,
+    select ticks any). No prompt found: no intro."""
     if not prompt_text or not str(prompt_text).strip():
         return None
-    return f"Generated from: {str(prompt_text).strip()}. Reject anything that misses it."
+    ask = INTRO_ASK.get(mode, INTRO_ASK["single"])
+    return f"Generated from: {str(prompt_text).strip()}. {ask}"
 
 
 def build_cards(

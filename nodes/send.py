@@ -16,15 +16,19 @@ async def send_from_inputs(cls, images, *, title, slug, prompt, intro, mode, opt
     node_id = cls.hidden.unique_id
     graph = cls.hidden.prompt
     facts = c.graph_facts(graph, node_id)
+    if mode == "pair" and images_b is None:
+        raise ValueError("pair mode needs images_b (the B side of each card)")
+    if mode != "pair" and images_b is not None:
+        c.say(f"images_b is for pair mode; ignored in {mode} mode")
+        images_b = None
+    if images_b is not None and c.batch_size(images_b) != c.batch_size(images):
+        raise ValueError(f"pair mode: images_b has {c.batch_size(images_b)} images for {c.batch_size(images)} "
+                         f"in images; one card per index needs the same batch size")
     config = c.queue_config(
         title=title, slug=slug, prompt=prompt, intro=intro, mode=mode, options=options, feedback=feedback,
         identity=identity, order=order, min_reviews=min_reviews, project=project,
-        prompt_text=facts.get("prompt_text"),
+        prompt_text=c.intro_prompt(graph, node_id, facts, mode),
     )
-    if mode == "pair" and images_b is None:
-        raise ValueError("pair mode needs images_b (the B side of each card)")
-    if mode != "pair":
-        images_b = None
     client = await c.connect()
     handle = await c.send(
         client, images, config, node_id=node_id, images_b=images_b, labels=labels, meta=meta, facts=facts,

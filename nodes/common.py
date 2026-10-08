@@ -21,6 +21,7 @@ import io as _io
 import json
 import logging
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Sequence, Tuple
@@ -91,12 +92,26 @@ async def connect() -> AsyncTrainyThingClient:
 # ---------------------------------------------------------------------------
 
 
+#: The daemon's OptionSchema (src/core/model.ts): the id's shape, the
+#: reserved id, the label's length, and how many options a queue may have.
+OPTION_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,39}$")
+OPTION_LABEL_MAX = 80
+OPTIONS_MIN, OPTIONS_MAX = 2, 12
+OPTION_MODES = ("choose", "select")
+OPTIONS_HELP = "id:Label, id:Label, ... (e.g. hair:Hair colour, scarf:Scarf, ok:Fine)"
+
+
 def parse_options(text: Optional[str]) -> Optional[List[Dict[str, str]]]:
     """``id:Label, id2:Label 2`` (commas or new lines) -> ``[{id, label}]``.
-    A bare ``id`` is its own label. Empty -> None."""
+    A bare ``id`` is its own label. Empty -> None. Checked against the
+    daemon's rules here, so the error names the entry: an id is lowercase
+    letters, digits, - and _ (at most 40, starting with a letter or digit),
+    ``skip`` is reserved, ids are unique, a label is at most 80 characters,
+    and there are 2 to 12 options."""
     if text is None or text.strip() == "":
         return None
     out: List[Dict[str, str]] = []
+    seen = set()
     for part in text.replace("\n", ",").split(","):
         part = part.strip()
         if not part:
@@ -104,8 +119,23 @@ def parse_options(text: Optional[str]) -> Optional[List[Dict[str, str]]]:
         oid, _, label = part.partition(":")
         oid, label = oid.strip(), label.strip()
         if not oid:
-            raise ValueError(f"options: an entry has no id: {part!r}")
-        out.append({"id": oid, "label": label or oid})
+            raise ValueError(f"options: {part!r} has no id; write {OPTIONS_HELP}")
+        if oid == "skip":
+            raise ValueError("options: 'skip' is reserved (it is every mode's 'couldn't decide'); pick another id")
+        if not OPTION_ID_RE.match(oid):
+            raise ValueError(
+                f"options: {oid!r} is not an option id: lowercase letters, digits, - and _, at most 40, "
+                f"starting with a letter or digit (the label after ':' can say anything)"
+            )
+        if oid in seen:
+            raise ValueError(f"options: the id {oid!r} appears twice")
+        seen.add(oid)
+        label = label or oid
+        if len(label) > OPTION_LABEL_MAX:
+            raise ValueError(f"options: the label of {oid!r} is longer than {OPTION_LABEL_MAX} characters")
+        out.append({"id": oid, "label": label})
+    if len(out) > OPTIONS_MAX:
+        raise ValueError(f"options: {len(out)} options; a queue takes at most {OPTIONS_MAX}")
     return out or None
 
 
@@ -126,17 +156,29 @@ def queue_config(
 ) -> Dict[str, Any]:
     """The ``POST /api/queues`` body. ``completion.min_reviews_per_card`` is
     always sent: without it ``/status`` never says ``done`` before a close or a
-    deadline. ``options`` only for choose / select (the daemon refuses them
-    elsewhere). An empty ``intro`` is §10 question 7's default."""
+    deadline. ``options`` are required for choose / select (an error naming
+    the problem when missing or malformed) and ignored, with a console line,
+    in the other modes (the daemon refuses them there). ``feedback:
+    on_reject`` has no reject to hang on outside single, and the daemon reads
+    it as ``optional`` there (src/core/serving.ts), so it is sent as
+    ``optional``, with a console line. An empty ``intro`` is §10 question 7's
+    default, worded for the mode."""
     if mode not in MODES:
         raise ValueError(f"unknown mode {mode!r} (want one of {', '.join(MODES)})")
-    opts = parse_options(options)
-    if mode in ("choose", "select"):
-        if not opts or len(opts) < 2:
-            raise ValueError(f"mode {mode} needs at least two options, as id:Label, id:Label")
+    if mode in OPTION_MODES:
+        if options is None or options.strip() == "":
+            raise ValueError(f"mode {mode} needs options: the answers the reviewer picks from, as {OPTIONS_HELP}")
+        opts = parse_options(options)
+        if not opts or len(opts) < OPTIONS_MIN:
+            raise ValueError(f"mode {mode} needs at least {OPTIONS_MIN} options, as {OPTIONS_HELP}")
     else:
         opts = None
-    intro_text = intro.strip() if intro and intro.strip() else default_intro(prompt_text)
+        if options and options.strip():
+            say(f"options are for choose / select; ignored in {mode} mode")
+    if feedback == "on_reject" and mode != "single":
+        say(f"feedback on_reject: there is no reject in {mode} mode, so a note is optional on every card")
+        feedback = "optional"
+    intro_text = intro.strip() if intro and intro.strip() else default_intro(prompt_text, mode)
     body: Dict[str, Any] = {
         "title": title.strip() or "ComfyUI batch",
         "slug": slug.strip() or None,
@@ -203,6 +245,22 @@ def graph_facts(prompt: Any, node_id: Any) -> Dict[str, Any]:
         return walk_graph(prompt, node_id, "images")
     except Exception as err:  # best effort by design
         return {"walk": f"stopped: {type(err).__name__}: {err}"}
+
+
+def intro_prompt(prompt: Any, node_id: Any, facts: Dict[str, Any], mode: str) -> Optional[str]:
+    """The positive prompt the default intro quotes. In pair mode A and B may
+    come from different prompts (that is often the question), so the intro
+    quotes one only when the walk from ``images_b`` finds the same text, and
+    says nothing about either otherwise: naming one would tell the reviewer
+    which side is which."""
+    text = facts.get("prompt_text")
+    if mode != "pair" or not text:
+        return text
+    try:
+        text_b = walk_graph(prompt, node_id, "images_b").get("prompt_text")
+    except Exception:
+        text_b = None
+    return text if text_b == text else None
 
 
 def send_line(handle: Dict[str, Any]) -> str:
@@ -411,23 +469,66 @@ def labels_text(lines: Sequence[Dict[str, Any]]) -> str:
     return "".join(json.dumps(line) + "\n" for line in lines)
 
 
+def _flat(note: Any) -> str:
+    return " ".join(note.split()) if isinstance(note, str) else ""
+
+
+def _option_order(run: "RunResults") -> List[str]:
+    """The option ids in the queue's order, then any a card brought."""
+    ids: List[str] = []
+    queue = (run.results or {}).get("queue") or {}
+    for opt in queue.get("options") or []:
+        if isinstance(opt, dict) and opt.get("id") and opt["id"] not in ids:
+            ids.append(str(opt["id"]))
+    for card in run.cards:
+        for opt in (card or {}).get("options") or []:
+            if isinstance(opt, dict) and opt.get("id") and opt["id"] not in ids:
+                ids.append(str(opt["id"]))
+    return ids
+
+
 def notes_text(run: "RunResults") -> str:
-    """§4.6 ``notes``: the rejection notes only, one per line, prefixed by the
-    card's label (``#<index>`` when it has none). In the modes with no
-    reject (pair, choose, select) every note counts."""
-    out: List[str] = []
+    """§4.6 ``notes``, one note per line, each prefixed by its card's label
+    (the card's ref when it has none). Skip notes are never in it.
+
+    - single: the rejection notes only, in batch order.
+    - pair: every note, with the side its reviewer chose:
+      ``<label> (chose A): <note>``. A note belongs to a judgment, not to a
+      side, so "the notes on the losing side" does not exist; the side
+      chosen says what the note was arguing for.
+    - choose / select: grouped by option, in the queue's option order:
+      ``<label> [hair]: <note>``; a select note carries every id its
+      reviewer ticked (``[hair, hands]``, ``[none]`` for an empty set) and is
+      grouped under the first of them."""
+    rows: List[Tuple[int, int, str]] = []  # (group, order, line)
+    order = _option_order(run) if run.mode in ("choose", "select") else []
+    k = 0
     for i, card in enumerate(run.cards):
         if card is None:
             continue
-        label = card.get("label") or f"#{i}"
+        label = card.get("label") or card.get("ref") or run.refs[i]
         for j in card.get("judgments") or []:
-            note = j.get("note")
-            if not isinstance(note, str) or note.strip() == "":
+            note = _flat(j.get("note"))
+            verdict = j.get("verdict")
+            if note == "" or verdict == "skip":
                 continue
-            if run.mode == "single" and j.get("verdict") != "reject":
-                continue
-            out.append(f"{label}: {' '.join(note.split())}")
-    return "\n".join(out)
+            k += 1
+            if run.mode == "single":
+                if verdict != "reject":
+                    continue
+                rows.append((0, k, f"{label}: {note}"))
+            elif run.mode == "pair":
+                side = str(verdict).upper() if verdict in ("a", "b") else str(verdict)
+                rows.append((0, k, f"{label} (chose {side}): {note}"))
+            elif run.mode in ("choose", "select"):
+                ids = [str(v) for v in verdict] if isinstance(verdict, list) else [str(verdict)]
+                ids = sorted(dict.fromkeys(ids), key=lambda v: order.index(v) if v in order else len(order))
+                group = order.index(ids[0]) if ids and ids[0] in order else len(order)
+                rows.append((group, k, f"{label} [{', '.join(ids) or 'none'}]: {note}"))
+            else:
+                rows.append((0, k, f"{label}: {note}"))
+    rows.sort()
+    return "\n".join(line for _, _, line in rows)
 
 
 def meta_json(run: "RunResults", indices: Sequence[int]) -> str:
@@ -552,6 +653,8 @@ def split_outputs(
     if n != len(run.refs):
         raise ValueError(f"the queue handle has {len(run.refs)} cards for {n} images: wire the batch Send was given")
     s = run.split
+    if run.mode == "pair" and images_b is not None:
+        images_b = match_size(images_b, images)
     if s.accepted:
         if run.mode == "pair":
             accepted = pick_images(images, images_b, s.accepted, s.accepted_from)
@@ -566,11 +669,23 @@ def split_outputs(
             rejected = slice_images(images, s.rejected)
     else:
         rejected = blocker()
-    if latent is not None and s.accepted:
+    if latent is not None and s.accepted and run.mode == "pair":
+        # The latent wired is A's; a pair that B won has none, so a sliced
+        # latent would not line up with accepted. Blocked, always, in pair.
+        say(PAIR_LATENT_LINE)
+        accepted_latent = blocker()
+    elif latent is not None and s.accepted:
         accepted_latent = slice_latent(latent, s.accepted)
     else:
         accepted_latent = blocker()
     indices: Any = list(s.accepted) if s.accepted else blocker()
+    if run.mode in OPTION_MODES:
+        # No yes or no in choose / select: every keeper socket is blocked,
+        # accepted_meta included; Filter with rule option does the work.
+        meta: Any = blocker()
+        say(option_line(run))
+    else:
+        meta = meta_json(run, s.accepted)
     return [
         accepted,
         rejected,
@@ -579,9 +694,36 @@ def split_outputs(
         labels_text(run.lines),
         run.summary_md,
         notes_text(run),
-        meta_json(run, s.accepted),
+        meta,
         indices,
     ]
+
+
+PAIR_LATENT_LINE = (
+    "pair mode: accepted_latent is blocked (the latent wired is A's, and a pair B won has none); "
+    "VAE Encode the accepted images for a latent of the winners"
+)
+
+
+def option_line(run: RunResults) -> str:
+    """choose / select: the counts per option, and where the images are."""
+    counts = ", ".join(f"{oid} {len(run.split.options.get(oid, []))}" for oid in _option_order(run)) or "no options"
+    return (f"{run.mode} mode: {counts}; accepted and rejected are empty by design: "
+            f"use TrainyThing Filter with rule option and an option id")
+
+
+def match_size(images_b: Any, images: Any) -> Any:
+    """images_b resized (bilinear) to images' height and width when they
+    differ: a ComfyUI batch has one size, and accepted mixes the two."""
+    if tuple(images_b.shape[1:3]) == tuple(images.shape[1:3]):
+        return images_b
+    import torch
+
+    say(f"images_b is {int(images_b.shape[2])}x{int(images_b.shape[1])}, images {int(images.shape[2])}x{int(images.shape[1])}: "
+        f"B resized to A's size for accepted / rejected")
+    return torch.nn.functional.interpolate(
+        images_b.movedim(-1, 1), size=tuple(images.shape[1:3]), mode="bilinear", align_corners=False
+    ).movedim(1, -1).clamp(0, 1)
 
 
 def blocked_outputs(count: int = len(WAIT_OUTPUTS)) -> List[Any]:

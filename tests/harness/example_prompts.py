@@ -72,17 +72,42 @@ def two_runs_send():
 
 
 def ab_pair():
-    """§5.3: A and B on one card. Here A is the sprites and B the same reversed."""
+    """§5.3: A and B on one card, same seeds, two settings. Here A is the
+    sprites and B the same sprites in another order (the second half first,
+    so both batches are 64x64)."""
     g = {}
     _loads(g, 1, SPRITES, "A")
     _batch(g, 13, 1, "Batch A (prompt A's VAE Decode)")
-    _loads(g, 51, list(reversed(SPRITES)), "B")
+    _loads(g, 51, SPRITES[6:] + SPRITES[:6], "B")
     _batch(g, 63, 51, "Batch B (prompt B's VAE Decode)")
     g["20"] = {"class_type": "TrainyThingReview", "inputs": {"images": ["13", 0], "images_b": ["63", 0], **SEND,
                "slug": "sprites-ab", "mode": "pair", "prompt": "Which one?", "feedback": "optional", **WAIT},
                "_meta": {"title": "TrainyThing Review (pair)"}}
-    _save(g, 30, ["20", 0], "trainything/ab-winners", "Save the winners")
-    _show(g, 33, ["20", 5], "Summary")
+    _save(g, 30, ["20", 0], "trainything/ab-winners", "Save the winners (A or B)")
+    _save(g, 31, ["20", 1], "trainything/ab-losers", "Save the losers")
+    _show(g, 32, ["20", 6], "Notes (with the side chosen)")
+    _show(g, 33, ["20", 5], "Summary (preferences.jsonl is in output/trainything/sprites-ab/)")
+    return g
+
+
+REASONS = "hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine"
+
+
+def choose_reasons():
+    """§5.4 "the reasons, counted": choose with four reason tags; the labels
+    carry the counts; Filter option hair -> the images with the hair problem."""
+    g = {}
+    _loads(g, 1, SPRITES, "Sprite")
+    _batch(g, 13, 1, "Batch Images (stands in for VAE Decode)")
+    g["20"] = {"class_type": "TrainyThingReview", "inputs": {"images": ["13", 0], **SEND, "slug": "sprites-reasons",
+               "mode": "choose", "options": REASONS, "prompt": "What is wrong with it?", "feedback": "optional", **WAIT},
+               "_meta": {"title": "TrainyThing Review (choose: the reasons)"}}
+    g["21"] = {"class_type": "TrainyThingFilter", "inputs": {"images": ["20", 3], "labels": ["20", 4], "rule": "option",
+               "option_id": "hair"}, "_meta": {"title": "TrainyThing Filter (option hair)"}}
+    _save(g, 22, ["21", 0], "trainything/reasons-hair", "Save the hair problems")
+    _show(g, 23, ["21", 3], "How many have the hair problem")
+    _show(g, 24, ["20", 5], "Summary (the counts per reason)")
+    _show(g, 25, ["20", 6], "Notes, by reason")
     return g
 
 
@@ -102,4 +127,5 @@ def two_runs_load():
     return g
 
 
-EXAMPLES = {"gate": gate, "two-runs-send": two_runs_send, "two-runs-load": two_runs_load, "ab-pair": ab_pair}
+EXAMPLES = {"gate": gate, "two-runs-send": two_runs_send, "two-runs-load": two_runs_load, "ab-pair": ab_pair,
+            "choose-reasons": choose_reasons}

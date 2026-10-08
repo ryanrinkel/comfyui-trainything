@@ -11,6 +11,13 @@ The tests patch ``slug``, ``labels``, ``timeout_minutes`` and ``on_timeout``.
 K2 adds ``send`` (Send only, the batch also saved as it went in, so Load's
 images can be compared with it) and ``load-filter`` (Load, every socket
 observed, and one Filter per rule over Load's images and labels).
+
+K3 adds ``ab-pair`` (§5.3: Review in pair mode over A = the sprites and B =
+the sprites reversed, a latent wired, both batches saved as they went in, and
+Filter accepted / rejected with both batches and accepted with A only) and
+``options`` (Review in choose mode with the four reason tags, one Filter per
+tag over Review's images and labels, and Filter accepted; the tests switch
+it to select).
 """
 
 import json
@@ -135,8 +142,70 @@ def load_filter():
     return g
 
 
+def _b_side(g):
+    for i, name in enumerate(reversed(SPRITES), start=51):
+        g[str(i)] = {"class_type": "LoadImage", "inputs": {"image": name}}
+    g["63"] = {"class_type": "BatchImagesNode", "inputs": {f"images.image{i}": [str(51 + i), 0] for i in range(12)}}
+    # Batch Images sizes the batch by its first image (s012, 512x512): scaled
+    # to A's 64x64 here, so the winners compare pixel for pixel.
+    g["64"] = {"class_type": "ImageScale", "inputs": {"image": ["63", 0], "upscale_method": "nearest-exact",
+                                                      "width": 64, "height": 64, "crop": "disabled"}}
+
+
+def _filter(g, nid, inputs, prefix):
+    """Filter ``nid`` (8k) with Save Image 9k, indices 10k and count 11k."""
+    k = nid[1]
+    g[nid] = {"class_type": "TrainyThingFilter", "inputs": inputs}
+    g[f"9{k}"] = {"class_type": "SaveImage", "inputs": {"images": [nid, 0], "filename_prefix": f"k3/{prefix}"}}
+    g[f"10{k}"] = {"class_type": "PreviewAny", "inputs": {"source": [nid, 2]}}
+    g[f"11{k}"] = {"class_type": "PreviewAny", "inputs": {"source": [nid, 3]}}
+
+
+def ab_pair():
+    """§5.3: twelve pairs on one Review; Filter over its labels with both
+    batches (80 accepted, with a latent; 81 rejected) and with A only (82)."""
+    g = {}
+    sources(g)
+    _b_side(g)
+    g["20"] = {"class_type": "TrainyThingReview", "inputs": {
+        "images": ["13", 0], "images_b": ["64", 0], "latent": ["14", 0],
+        **dict(SEND, title="K3 A/B", slug="k3-ab", mode="pair", prompt="Which one?", feedback="optional"), **WAIT}}
+    observers(g, "20")
+    g["42"] = {"class_type": "SaveImage", "inputs": {"images": ["13", 0], "filename_prefix": "k3/a"}}
+    g["43"] = {"class_type": "SaveImage", "inputs": {"images": ["64", 0], "filename_prefix": "k3/b"}}
+    _filter(g, "80", {"images": ["13", 0], "images_b": ["64", 0], "latent": ["14", 0], "labels": ["20", 4],
+                      "rule": "accepted", "option_id": ""}, "filter_ab_accepted")
+    _filter(g, "81", {"images": ["13", 0], "images_b": ["64", 0], "labels": ["20", 4],
+                      "rule": "rejected", "option_id": ""}, "filter_ab_rejected")
+    _filter(g, "82", {"images": ["13", 0], "labels": ["20", 4], "rule": "accepted", "option_id": ""},
+            "filter_a_accepted")
+    g["120"] = {"class_type": "SaveLatent", "inputs": {"samples": ["80", 1], "filename_prefix": "k3/filter_latent"}}
+    return g
+
+
+TAG_IDS = ["hair", "scarf", "hands", "ok"]
+TAGS = "hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine"
+
+
+def options():
+    """§5.4 "the reasons, counted": Review in choose mode with four reason
+    tags; Filter 80..83 per tag, 84 accepted (empty by design)."""
+    g = {}
+    sources(g)
+    g["20"] = {"class_type": "TrainyThingReview", "inputs": {
+        "images": ["13", 0], "latent": ["14", 0],
+        **dict(SEND, title="K3 reasons", slug="k3-choose", mode="choose", options=TAGS, prompt="What is wrong with it?",
+               feedback="on_reject"), **WAIT}}
+    observers(g, "20")
+    g["42"] = {"class_type": "SaveImage", "inputs": {"images": ["13", 0], "filename_prefix": "k3/sent"}}
+    for k, tag in enumerate(TAG_IDS):
+        _filter(g, f"8{k}", {"images": ["20", 3], "labels": ["20", 4], "rule": "option", "option_id": tag}, f"filter_{tag}")
+    _filter(g, "84", {"images": ["20", 3], "labels": ["20", 4], "rule": "accepted", "option_id": ""}, "filter_accepted")
+    return g
+
+
 if __name__ == "__main__":
     for name, fn in {"gate": gate, "send-wait": send_wait, "send-pair": send_pair, "send": send,
-                     "load-filter": load_filter}.items():
+                     "load-filter": load_filter, "ab-pair": ab_pair, "options": options}.items():
         (HERE / f"{name}.json").write_text(json.dumps(fn(), indent=1) + "\n")
         print(f"wrote {name}.json")

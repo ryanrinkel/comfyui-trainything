@@ -1,5 +1,5 @@
 {
- "id": "d5eeb0a2-b3f6-4466-b6d2-103b517632a8",
+ "id": "6bd109c0-4b61-4ad7-a8c9-4e849e6ed90a",
  "revision": 0,
  "last_node_id": 6,
  "last_link_id": 6,
@@ -152,6 +152,13 @@
      "name": "latent",
      "shape": 7,
      "type": "LATENT",
+     "link": null
+    },
+    {
+     "localized_name": "images_b",
+     "name": "images_b",
+     "shape": 7,
+     "type": "IMAGE",
      "link": null
     },
     {

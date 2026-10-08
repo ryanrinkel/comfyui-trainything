@@ -6,7 +6,8 @@ the Review node: docs/screenshots/review-node.png.
 
 A throwaway daemon and ComfyUI (tests/comfyrun.py), both killed at the end.
 --check queues two-runs-send.json and then two-runs-load.json as the frontend
-would (canvas.mjs prompt), with a scripted review between them.
+would (canvas.mjs prompt), with a scripted review between them, then
+ab-pair.json and choose-reasons.json, reviewed while their Review waits.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -52,6 +54,37 @@ def check(root: Path, comfy: Comfy, daemon) -> None:
     saves = [o for o in h["outputs"].values() if "images" in o]
     assert len(saves) == 1 and len(saves[0]["images"]) == 8, h["outputs"]
     print("check: two-runs-send then two-runs-load queued from the frontend; 8 keepers saved")
+
+    # K3: the two Review examples hold the run, so the review happens while
+    # they wait. ab-pair: A for the first 7 cards served, B for the next 4,
+    # skip the last; choose-reasons: the four tags in turn (3 hair).
+    def queue_and_review(name: str, slug: str, decide) -> dict:
+        out = root / f"{name}.queued.json"
+        subprocess.run(["node", str(HERE / "canvas.mjs"), "prompt", comfy.url, str(EXAMPLES_DIR / f"{name}.json"), str(out)], check=True)
+        pid = comfy.submit(json.loads(out.read_text()))
+        client = daemon.client()
+        for _ in range(300):
+            if client.find_queue(slug) is not None and client.status(slug)["cards"] >= 12:
+                break
+            time.sleep(0.3)
+        seen: list = []
+        Reviewer(daemon.url, slug, "Ada").review(lambda ref: seen.append(ref) or decide(len(seen) - 1))
+        h = comfy.wait_history(pid)
+        assert h["status"]["status_str"] == "success", h["status"]
+        return h
+
+    h = queue_and_review("ab-pair", "sprites-ab", lambda k: "a" if k < 7 else ("b" if k < 11 else "skip"))
+    saves = {nid: o for nid, o in h["outputs"].items() if "images" in o and nid != "20"}
+    assert sorted(len(o["images"]) for o in saves.values()) == [11, 11], h["outputs"]
+    prefs = (comfy.output / "trainything" / "sprites-ab" / "preferences.jsonl").read_text().splitlines()
+    assert len(prefs) == 11, prefs
+    print("check: ab-pair queued from the frontend; 7 A + 4 B, 1 skipped: 11 winners, 11 losers, 11 preferences")
+
+    tags = ["hair", "scarf", "hands", "ok"]
+    h = queue_and_review("choose-reasons", "sprites-reasons", lambda k: tags[k % 4])
+    saves = {nid: o for nid, o in h["outputs"].items() if "images" in o and nid != "20"}
+    assert [len(o["images"]) for o in saves.values()] == [3], h["outputs"]  # cards 0, 4, 8 served: hair
+    print("check: choose-reasons queued from the frontend; Filter option hair saved the hair cards")
 
 
 def main() -> None:

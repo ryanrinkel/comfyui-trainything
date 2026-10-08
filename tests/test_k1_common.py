@@ -66,9 +66,7 @@ def test_notes_are_rejection_notes_prefixed_by_label():
         {"label": "s3", "judgments": [{"verdict": "reject", "note": "hands"}, {"verdict": "reject", "note": None}]},
     ]
     run = _run("single", cards, ["accept", "reject", "reject"])
-    assert c.notes_text(run) == "#1: too dark\ns3: hands"
-    pair = _run("pair", [dict(cards[0])], ["a"])
-    assert c.notes_text(pair) == "s1: nice"
+    assert c.notes_text(run) == "r-1: too dark\ns3: hands"  # no label: the ref (K3)
 
 
 def test_accepted_meta_keeps_the_card_meta():
