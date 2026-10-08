@@ -1,0 +1,20 @@
+[project]
+name = "comfyui-trainything"
+description = "Send a ComfyUI batch to a phone for review with TrainyThing; the keepers, the notes and the seeds come back into the graph."
+version = "0.0.1"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = ["segno>=1.6", "pillow", "numpy"]
+
+[project.urls]
+Repository = "https://github.com/ryanrinkel/comfyui-trainything"
+
+[tool.comfy]
+PublisherId = "trainything"  # placeholder until gate N (PLAN-COMFY §10 question 8)
+DisplayName = "TrainyThing"
+Icon = ""
+includes = []
+requires-comfyui = ">=0.39.0"  # verified at K0 against ComfyUI 0.39.0, comfy_api latest (docs/V3-NOTES.md)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

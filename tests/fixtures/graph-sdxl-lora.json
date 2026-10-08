@@ -1,0 +1,80 @@
+{
+  "4": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": { "ckpt_name": "sd_xl_base_1.0.safetensors" },
+    "_meta": { "title": "Load Checkpoint" }
+  },
+  "10": {
+    "class_type": "LoraLoader",
+    "inputs": {
+      "model": ["4", 0],
+      "clip": ["4", 1],
+      "lora_name": "pixel-art-xl.safetensors",
+      "strength_model": 0.8,
+      "strength_clip": 0.7
+    },
+    "_meta": { "title": "Load LoRA" }
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "pixel art sprite of a red-haired witch with a green scarf, 64x64, clean outline, transparent background",
+      "clip": ["10", 1]
+    },
+    "_meta": { "title": "CLIP Text Encode (Prompt)" }
+  },
+  "7": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "blurry, jpeg artifacts, extra fingers, text, watermark",
+      "clip": ["10", 1]
+    },
+    "_meta": { "title": "CLIP Text Encode (Negative)" }
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": { "width": 1024, "height": 1024, "batch_size": 12 },
+    "_meta": { "title": "Empty Latent Image" }
+  },
+  "3": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["10", 0],
+      "seed": 156680208700286,
+      "steps": 28,
+      "cfg": 6.5,
+      "sampler_name": "dpmpp_2m",
+      "scheduler": "karras",
+      "positive": ["6", 0],
+      "negative": ["7", 0],
+      "latent_image": ["5", 0],
+      "denoise": 1.0
+    },
+    "_meta": { "title": "KSampler" }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": { "samples": ["3", 0], "vae": ["4", 2] },
+    "_meta": { "title": "VAE Decode" }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "inputs": { "filename_prefix": "sprites/witch", "images": ["8", 0] },
+    "_meta": { "title": "Save Image" }
+  },
+  "12": {
+    "class_type": "TrainyThingReview",
+    "inputs": {
+      "images": ["8", 0],
+      "latent": ["3", 0],
+      "title": "Witch sprites",
+      "slug": "witch-sprites",
+      "mode": "single",
+      "feedback": "on_reject",
+      "min_reviews": 1,
+      "timeout_minutes": 45,
+      "on_timeout": "partial"
+    },
+    "_meta": { "title": "TrainyThing Review" }
+  }
+}
