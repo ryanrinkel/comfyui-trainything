@@ -84,3 +84,23 @@ def test_hop_cap_on_a_cycle(graph):
 def test_no_graph():
     assert walk_graph(None, "1")["walk"].startswith("no graph")
     assert walk_graph({"1": {"class_type": "X", "inputs": {}}}, "2")["walk"] == "node 2 is not in the graph"
+
+
+OWNER_GRAPH = __import__("pathlib").Path(__file__).resolve().parent / "fixtures" / "graph-owner.json"
+
+
+@__import__("pytest").mark.skipif(not OWNER_GRAPH.exists(), reason="no tests/fixtures/graph-owner.json yet (docs/OWNER-RUN.md)")
+def test_walk_on_the_owners_graph():
+    """Gate K4's owner step: the owner's real graph, exported as API JSON.
+    From every TrainyThing Review / Send in it, the walk reaches the sampler,
+    the prompts and the checkpoint."""
+    import json
+
+    graph = json.loads(OWNER_GRAPH.read_text())
+    starts = [nid for nid, n in graph.items() if n.get("class_type") in ("TrainyThingReview", "TrainyThingSend")]
+    assert starts, "graph-owner.json has no TrainyThing Review or Send node"
+    for nid in starts:
+        facts = walk_graph(graph, nid)
+        assert facts["walk"] == "complete", (nid, facts["walk"])
+        for key in ("seed", "steps", "cfg", "sampler", "prompt_text", "checkpoint", "batch_size"):
+            assert key in facts, (nid, key, facts)

@@ -1,135 +1,349 @@
 # TrainyThing for ComfyUI
 
-Wire it after VAE Decode, press Queue, and the batch is on your phone as a
-TrainyThing review queue: one card per image, swipe to keep or reject, say why.
-The keepers, the notes, the seeds and the prompts come back into the graph.
+![TrainyThing Review waiting on the canvas: the link and its QR on the node](docs/screenshots/review-node-waiting.png)
 
-It needs the TrainyThing daemon, which needs Node 22.5 or newer
-(`npx -y trainything dashboard` once).
+Wire **TrainyThing Review** after VAE Decode and press Queue: the batch becomes
+a TrainyThing review queue, the node shows its link and a QR, and the run waits.
+Scan it, swipe each image keep or reject on your phone (with a note on why),
+and the run goes on with the keepers, the rejects, the notes and each keeper's
+seed and prompt on separate sockets. Use it when the choice should be made on a
+phone, away from the desk, with a reason attached, or by more than one person.
+If you only want to click the keepers on the canvas yourself, keep using an
+on-canvas chooser such as cg-image-picker's Image Chooser; it is simpler for
+that.
 
-**Status: K3.** Five nodes under *TrainyThing* on the canvas: **Review** (send
-the batch, show the link and a QR, wait for the verdicts, pass on the keepers),
-**Send** (the first half, for a run that should not wait), **Wait** (the
-second half), **Load** (a later run reads a queue back by its slug, images
-included) and **Filter** (any batch and its labels, a rule -> the subset).
-The full README is K4.
+## Install
 
-![The Review node after a review](docs/screenshots/review-node.png)
+Clone the pack into ComfyUI's `custom_nodes/`, install its one dependency
+with ComfyUI's own python, and restart ComfyUI. **It needs the TrainyThing
+daemon, which needs Node ≥ 22.5:** start it once with
+`npx -y trainything dashboard` (it keeps running in the background).
 
-Try it: copy `tests/fixtures/sprites/*.png` into ComfyUI's `input/` folder,
-drag `examples/gate.json` onto the canvas, press Run, scan the QR.
-`examples/ab-pair.json` is the A/B card, `examples/choose-reasons.json` the
-reasons counted.
+```
+cd ComfyUI/custom_nodes
+git clone https://github.com/ryanrinkel/comfyui-trainything
+cd comfyui-trainything
+python -m pip install -r requirements.txt     # the python ComfyUI runs with (its venv, or python_embeded\python.exe)
+# restart ComfyUI; the five nodes are under "TrainyThing" in the node library
+npx -y trainything dashboard                  # once: starts the daemon and opens its dashboard
+```
 
-## The nodes
+ComfyUI Manager's "Install via Git URL" with the same URL does the same clone
+and install. The Comfy Registry comes later (after the name is final).
 
-| Node | Outputs |
-|---|---|
-| TrainyThing Review | `accepted`, `rejected`, `accepted_latent`, `images`, `labels`, `summary`, `notes`, `accepted_meta`, `accepted_indices` (a list), `link`, `slug` |
-| TrainyThing Send | `queue` (only a Wait takes it), `link`, `slug` |
-| TrainyThing Wait | as Review, minus `link` and `slug` |
-| TrainyThing Load | as Wait, minus `accepted_latent`: `accepted`, `rejected`, `images`, `labels`, `summary`, `notes`, `accepted_meta`, `accepted_indices` |
-| TrainyThing Filter | `images`, `latent`, `indices` (a list), `count` (inputs: `images`, `latent`, `images_b`, `labels`, `rule`, `option_id`) |
+**Until the npm publish.** The `trainything` npm package is not published yet,
+so `npx -y trainything` does not work today. Until it is, run the daemon from
+the trainything repository: `pnpm install && pnpm build` once, then
+`node dist/cli.js dashboard`. The nodes' own auto-start (`npx -y trainything
+list` when no daemon answers on this machine) fails the same way and the node
+says what to run.
 
-An empty `accepted` or `rejected` stops only its own branch, silently.
-`on_timeout: block` stops everything downstream. Interrupting a waiting node
-leaves the queue open. Each finished wait, and each Load, writes
-`output/trainything/<slug>/` (`results.json`, `blobs/`, `labels.jsonl`,
-`summary.md`, and `preferences.jsonl` in pair mode).
-
-**Modes.** `single` (keep or reject), `pair` (A or B: wire `images_b`, the
-same batch size; one card per index with A and B side by side), `choose`
-(one answer per card) and `select` (any answers per card); choose and select
-need `options`, as `id:Label, id:Label` (`hair:Hair colour, scarf:Scarf,
-hands:Hands, ok:Fine`; an id is lowercase letters, digits, `-` and `_`, 2 to
-12 options; a malformed list is an error that names the entry). In
-`single` and `pair` `options` is ignored, with a console line. `feedback:
-on_reject` is sent as `optional` outside single (there is no reject), with a
-console line. An empty `intro` quotes the positive prompt and says what to do
-in that mode (pair quotes it only when A and B share it).
-
-- **pair:** `accepted` is the chosen image of each pair, from either side,
-  in index order; `rejected` the other one. `accepted_indices` and
-  `accepted_meta` are the pairs with a winner. `accepted_latent` is
-  **blocked** in pair mode (console line): the latent wired is A's, and a
-  pair B won has none, so a slice could not line up with `accepted`; VAE
-  Encode `accepted` for a latent of the winners. A skipped pair is
-  `unjudged`. The run's folder gains `preferences.jsonl` (the DPO shape, one
-  line per pair with a winner).
-- **choose / select:** there is no yes or no, so `accepted`, `rejected`,
-  `accepted_latent`, `accepted_meta` and `accepted_indices` are all blocked,
-  silently (the console prints the counts per option). `labels` carries the
-  counts (each line's `counts` and `verdict`); `summary` has the table;
-  TrainyThing Filter with `rule: option` and an `option_id` gives the images.
-
-**`notes`**, one per line, each prefixed by the card's label (its ref when it
-has none); skip notes are never in it. single: the rejection notes. pair:
-every note, with the side its reviewer chose (`sprite 03 (chose B): cleaner
-outline`). choose / select: grouped by option in the queue's order, tagged
-with the ids the reviewer picked (`sprite 01 [hair]: too red`, `sprite 04
-[hair, hands]: ...`). **`summary`** is the daemon's `summary.md` as is.
-
-**Load** reads the whole queue: every image card in card order is one image of
-the batch (an appended queue's runs one after the other), so `labels` has one
-line per image and Filter can slice Load's `images`. `accepted_meta` is what
-Send attached to each keeper (its `index` is the position in *its* run, for
-Latent From Batch; `accepted_indices` are positions in Load's batch). A
-ComfyUI batch has one size, so an image whose size differs from the first
-card's is resized to it (bilinear) and the console says how many were. Cards
-that are not images (text, audio, video added by the CLI) are skipped with a
-console line and are in no output. In pair mode `images` is the A side and
-`accepted` / `rejected` take the winning / losing side of each pair. With
-`wait` on, Load waits as Wait does (interruptible; at the timeout it loads
-what is judged). ComfyUI re-runs Load only when the queue moved: its
-fingerprint is the queue's card count, judgment count, status and closed
-time (an undo followed by a different verdict leaves the count unchanged; change
-the slug field and back, or press Queue after the next verdict). A daemon on
-another machine is read through `results/bundle.zip`.
-
-**Filter** reads the `labels` of Wait, Review or Load, one line per image
-(line *i* is index *i*; a line that carries its own `index` places itself),
-and keeps the indices that match `rule`: `accepted`, `rejected`,
-`contested`, `unjudged`, or `option` with `option_id` (choose: the
-consensus is that id; select: it includes it; the mode is read from the
-lines). A line count that differs from the batch size is an error. An empty
-subset blocks `images`, `latent` and `indices` silently; `count` is 0. On
-pair labels, wire the B batch to `images_b` too and `accepted` / `rejected`
-take the winning / losing image of each pair (the `latent` output is then
-blocked: the picks come from both sides); without `images_b` they take the A
-side, and `latent` is A's, sliced.
+Try it without a model: copy `tests/fixtures/sprites/*.png` into ComfyUI's
+`input/`, drag `examples/gate.json` onto the canvas, press Run, scan the QR.
 
 ## Where it finds the daemon
 
-The same order as the TrainyThing CLI: `TRAINYTHING_URL` and
-`TRAINYTHING_TOKEN` in ComfyUI's environment, then `base_url` / `port` and
-`owner_token` in `$TRAINYTHING_HOME/config.json` (default
-`~/.trainything/config.json`), then `http://127.0.0.1:4747`. The token is never
-a widget, so it never lands in a PNG or a shared workflow.
+The same order as the TrainyThing CLI, so the CLI, the MCP server and ComfyUI on
+one machine agree:
 
-`TRAINYTHING_FORCE_REMOTE=1` is for tests only: it makes the pack treat even
-a daemon on 127.0.0.1 as remote (no auto-start; results through the bundle).
+1. `TRAINYTHING_URL` and `TRAINYTHING_TOKEN` in ComfyUI's environment;
+2. `base_url` (or `port`) and `owner_token` in `$TRAINYTHING_HOME/config.json`
+   (default `~/.trainything/config.json`; the daemon writes it on first start);
+3. `http://127.0.0.1:4747`.
 
-## Layout
+**The token is never a widget.** ComfyUI writes every widget value into each
+PNG's metadata and into saved and shared workflow files, so a token typed into
+a node would leak with the first image posted. The link and slug on the node
+are not secrets the daemon relies on. With no daemon at the URL the node fails
+with one line: `no TrainyThing at http://127.0.0.1:4747; run
+npx -y trainything dashboard once`. ComfyUI on another machine (a rented GPU)
+needs `TRAINYTHING_URL` pointing at a daemon it can reach.
+
+## The three workflows
+
+All three are in `examples/`, built on Load Image and twelve sprites so they
+run with no model (see `examples/README.md`); in a real graph VAE Decode's
+output goes where Batch Images is.
+
+**1. The gate: review inside the run** (`examples/gate.json`). Press Queue,
+scan the QR, swipe, and the run finishes with the keepers saved and the
+rejection notes on screen. The run waits at Review (45 minutes by default,
+then it goes on with what was judged).
+
+```
+Load Checkpoint ──▶ CLIP Text Encode (+) ──┐
+                    CLIP Text Encode (−) ──┤
+Empty Latent (batch 12) ───────────────────┴─▶ KSampler ──▶ VAE Decode ──▶ images ─┐
+                                                   └──────────────── latent ───────┤
+                                                                                   ▼
+                                                                     [ TrainyThing Review ]
+                                                                     link + QR on the node; the run waits
+                                                                        │ accepted ──▶ Upscale ──▶ Save Image
+                                                                        │ accepted_latent ──▶ KSampler (denoise 0.35) ──▶ …
+                                                                        │ notes ──▶ Show Text
+                                                                        └ rejected ──▶ Save Image (prefix "rejected/")
+```
+
+**2. Two runs: refine from what was said** (`examples/two-runs-send.json`,
+then `examples/two-runs-load.json`). Run 1 sends and ends; queue it several
+times with the same slug and the queue on the phone grows. Run 2 reads the
+queue back whenever the reviewing is done, images included, even if
+ComfyUI's output folder no longer has them. This is the path that never holds
+ComfyUI's queue.
+
+```
+run 1   … ──▶ VAE Decode ──▶ [ TrainyThing Send  slug: sprites-08 ]        (the run ends; review when convenient)
+
+run 2   [ TrainyThing Load  slug: sprites-08 ] ──▶ images ──▶ [ TrainyThing Filter  accepted ] ──▶ VAE Encode ──▶ KSampler ──▶ …
+                                               ├──▶ summary ──▶ Show Text         (rewrite the prompt from the notes)
+                                               └──▶ accepted_meta                 (the keepers' seeds and prompts)
+```
+
+**3. A and B: which prompt, checkpoint or LoRA** (`examples/ab-pair.json`).
+The same seeds through two settings; one card per index with both images on
+it; `accepted` is the winner of each pair and the run's folder gains
+`preferences.jsonl` (the DPO shape).
+
+```
+prompt A ──▶ KSampler (seed 1000) ──▶ VAE Decode ──▶ images   ─┐
+prompt B ──▶ KSampler (seed 1000) ──▶ VAE Decode ──▶ images_b ─┴─▶ [ TrainyThing Review  mode: pair ] ──▶ accepted (the winners)
+                                                                        output/trainything/<slug>/preferences.jsonl
+```
+
+## The nodes
+
+All five are under **TrainyThing** in the node library.
+
+### TrainyThing Review
+
+Send, then Wait, in one node; the batch and its latent stay in memory across
+the wait. An output node: it runs with nothing wired downstream.
+
+| Input | Default | What it does |
+|---|---|---|
+| `images` | | IMAGE, any batch size: one card per image |
+| `latent` (optional) | | LATENT of the same batch: `accepted_latent` is sliced from it |
+| `title` | `ComfyUI batch` | the queue's title on the phone and the dashboard |
+| `slug` | empty | the link name. Empty: from the title. An open queue's name: the cards are **appended**. A closed queue's name: an error. `random`: an unguessable one |
+| `prompt` | `Keep this one?` | the question on every card |
+| `intro` | empty | shown before the first card. Empty: "Generated from: *the positive prompt*." and what to do in this mode |
+| `mode` | `single` | `single`, `pair`, `choose`, `select` (see Modes) |
+| `options` | empty | `choose` / `select` only, required there: `id:Label, id:Label, …` |
+| `feedback` | `on_reject` | when the reviewer is asked why: `on_reject`, `optional`, `off`, `required` |
+| `identity` | `name_email` | reviewers give a name and email, or `anonymous` |
+| `order` | `coverage` | `coverage` (cards with fewest reviews first) or `fixed` (batch order) |
+| `min_reviews` | 1 | reviews per card before the queue is done (1 to 50) |
+| `public` | off | start the tunnel now, so the link works off this machine |
+| `project` | `comfyui` | the project tag on the dashboard |
+| `images_b` (optional) | | `pair` mode: the B side, same batch size |
+| `labels` (optional) | empty | one line per image, shown above its card |
+| `meta` (optional) | empty | one JSON object for all images, or one per image (JSON lines or an array); merged over what the graph walk found, and it wins |
+| `timeout_minutes` | 45 | stop waiting after this long (≥ 0.1); the queue stays open |
+| `on_timeout` | `partial` | `partial`: go on with what was judged, the rest `unjudged`. `block`: nothing downstream runs |
+
+Hidden: the node's id, the prompt graph and the workflow, which go into each
+PNG's `prompt` / `workflow` chunks and feed the graph walk.
+
+| Output | Type | What it holds |
+|---|---|---|
+| `accepted` | IMAGE | the keepers, in batch order |
+| `rejected` | IMAGE | the rejects |
+| `accepted_latent` | LATENT | the keepers' latents, when `latent` was wired |
+| `images` | IMAGE | the whole batch |
+| `labels` | STRING | `labels.jsonl` for this run: one line per image with `ref`, `label`, `verdict`, the tallies, `contested`, `notes` |
+| `summary` | STRING | the daemon's `summary.md`: counts, then notes grouped by verdict |
+| `notes` | STRING | the notes, one per line, prefixed by the card's label |
+| `accepted_meta` | STRING | a JSON array of the keepers' `meta`: `index`, `run`, `seed`, `steps`, `cfg`, `sampler`, `scheduler`, `denoise`, `prompt_text`, `negative_text`, `checkpoint`, `loras`, `batch_size`, `width`, `height`, `walk`, plus your `meta` |
+| `accepted_indices` | INT list | the keepers' batch indices; a node downstream runs once per keeper |
+| `link` | STRING | the review link (the tunnel's when `public` is on) |
+| `slug` | STRING | the queue's name |
+
+An empty `accepted` or `rejected` stops only its own branch: Save Image after
+`rejected` simply does not run when nothing was rejected.
+
+### TrainyThing Send
+
+Review's first half: makes (or appends to) the queue, shows the link and QR,
+and the run goes on. An output node.
+
+Inputs: Review's, without `latent`, `timeout_minutes` and `on_timeout`.
+
+| Output | Type | What it holds |
+|---|---|---|
+| `queue` | TRAINYTHING_QUEUE | a handle (URL, slug, queue id, link, this run's card refs); only TrainyThing Wait takes it |
+| `link` | STRING | the review link |
+| `slug` | STRING | the queue's name |
+
+### TrainyThing Wait
+
+Review's second half, for when Send and the split sit in different parts of
+the graph.
+
+| Input | Default | What it does |
+|---|---|---|
+| `queue` | | from TrainyThing Send |
+| `images` | | the batch Send was given, to slice |
+| `latent` (optional) | | its latent, for `accepted_latent` |
+| `images_b` (optional) | | `pair` mode: the B batch, so winners can come from either side |
+| `timeout_minutes` | 45 | as Review |
+| `on_timeout` | `partial` | as Review |
+
+Outputs: Review's first nine (`accepted` … `accepted_indices`), not `link` or
+`slug`. Only this run's cards are split, even in an appended queue.
+
+### TrainyThing Load
+
+A later run reads a queue back by name, images from the daemon's blob store.
+
+| Input | Default | What it does |
+|---|---|---|
+| `slug` | empty | the queue's link name (as on the dashboard), or its id |
+| `wait` | off | off: read what is judged now. On: wait until the queue is done or the timeout, as Wait does |
+| `timeout_minutes` | 45 | with `wait` on: stop waiting and load what is judged |
+
+| Output | Type | What it holds |
+|---|---|---|
+| `accepted`, `rejected`, `images` | IMAGE | as Review; `images` is every image card in card order (an appended queue's runs one after another) |
+| `labels`, `summary`, `notes`, `accepted_meta` | STRING | as Review, for the whole queue |
+| `accepted_indices` | INT list | positions in Load's batch (`accepted_meta[].index` is the position in the keeper's *own* run, for Latent From Batch) |
+
+No `accepted_latent`: a latent is not stored. Cards that are not images
+(text, audio, video added by the CLI) are skipped with a console line. ComfyUI
+re-runs Load only when the queue moved (cards, judgments, status, closed time).
+
+### TrainyThing Filter
+
+Any batch, the labels, a rule: the subset. It does not talk to the daemon.
+
+| Input | Default | What it does |
+|---|---|---|
+| `images` | | the batch the labels describe, one line per image |
+| `latent` (optional) | | its latent, sliced the same way |
+| `images_b` (optional) | | `pair` labels: the B batch, so `accepted` / `rejected` take the winning / losing image of each pair (not wired: the A side) |
+| `labels` | | from Review, Wait or Load (a socket, not a text box) |
+| `rule` | `accepted` | `accepted`, `rejected`, `contested`, `unjudged`, `option` |
+| `option_id` | empty | with `option`: `choose`, the consensus is this id; `select`, it includes it |
+
+| Output | Type | What it holds |
+|---|---|---|
+| `images` | IMAGE | the subset, in batch order |
+| `latent` | LATENT | its latent (blocked when the picks come from both pair sides) |
+| `indices` | INT list | the subset's indices |
+| `count` | INT | how many (0 when empty; the other three are then blocked) |
+
+A labels line count that differs from the batch size is an error.
+
+## Modes
+
+| Mode | The card | `accepted` / `rejected` |
+|---|---|---|
+| `single` | one image; keep or reject | the keepers / the rejects |
+| `pair` | `images` (A) and `images_b` (B) side by side; pick one | the chosen image of each pair, from either side / the other one. `accepted_latent` is blocked (the wired latent is A's) |
+| `choose` | one image; pick one of the `options` | both blocked; `labels` and `summary` carry the counts; Filter `option` gives the images |
+| `select` | one image; pick any of the `options` | as `choose` |
+
+`options` is `id:Label, id:Label, …`, for example `hair:Hair colour,
+scarf:Scarf, hands:Hands, ok:Fine`. An id is lowercase letters, digits, `-`
+and `_`; 2 to 12 options; a malformed list is an error that names the entry.
+It is ignored (with a console line) in `single` and `pair`. In `choose` and
+`select`, `accepted_meta` and `accepted_indices` are blocked too.
+
+A card is **contested** when reviewers tie (with `min_reviews` above 1) and
+**unjudged** when nobody judged it, or it was skipped; such cards are in
+neither set and Filter reaches them by rule. `notes`: single, the rejection
+notes; pair, every note with the side chosen (`sprite 03 (chose B): cleaner
+outline`); choose / select, grouped by option (`sprite 04 [hair, hands]: …`).
+
+## Recipes
+
+| To refine… | Wire |
+|---|---|
+| Keep only the keepers | `accepted` → Save Image |
+| The keepers, bigger | `accepted` → Upscale → KSampler img2img, or `accepted_latent` → KSampler at low denoise |
+| One keeper, exactly again | drag its PNG from `output/trainything/<slug>/blobs/` onto the canvas: the workflow is inside it. Or `seed` + `batch_size` + `index` from `accepted_meta` with core's Latent From Batch |
+| The prompt | `summary` (or `notes`) → a text preview; read the notes beside the prompt and change it |
+| The reasons, counted | `mode: choose` with reason tags as options → the counts in `summary`; Filter `option hair` → those images |
+| Defects, tagged | `mode: select` with the same tags; Filter `option` takes every card that includes one |
+| Two of anything | `images_b`, `mode: pair`, same seeds → `preferences.jsonl` |
+| A dataset of keepers with captions | `python examples/dataset.py ComfyUI/output/trainything/<slug>` → `<ref>.png` + `<ref>.txt` pairs (caption: `meta.prompt_text`), the LoRA-trainer convention. `--rule rejected` or `--rule option:<id>`; `--out DIR`. Standard library only |
+| Several opinions | `min_reviews: 2` and `public` on; contested cards stay out of both sets and are yours to decide |
+
+## What the run leaves on disk
+
+Each finished wait (Review, Wait) and each Load writes
+`ComfyUI/output/trainything/<slug>/` (the files are overwritten each time):
+
+| File | What |
+|---|---|
+| `results.json` | the whole queue: every card, its items, `meta`, judgments and summary |
+| `blobs/` | every image as the PNG that was uploaded, with the `prompt` and `workflow` chunks Save Image writes |
+| `labels.jsonl` | one line per card: `ref`, `label`, `verdict`, tallies, `contested`, `notes` |
+| `summary.md` | counts and notes grouped by verdict, written to be read |
+| `preferences.jsonl` | `pair` mode only: one line per pair with a winner |
+
+The queue itself lives in the daemon (`~/.trainything`), so Load can read it
+back after this folder is gone.
+
+## Known limits
+
+- **A waiting node holds ComfyUI's whole queue**, like every on-canvas
+  chooser. Nothing else runs until the reviewing is done, the timeout passes
+  or you press Cancel (the queue stays open; Load reads it later). Send, then
+  Load, never holds it.
+- **ComfyUI caches an unchanged Send or Review**: queueing the same graph
+  with the same inputs skips it, since those images are already on the phone.
+  Change a seed or a widget to send again.
+- **`accepted_latent` is always blocked in `pair` mode**: the wired latent is
+  A's and a pair B won has none. VAE Encode `accepted` for the winners' latent.
+- **Load after an undo**: an undo followed by a different verdict leaves the
+  judgment count unchanged, so ComfyUI may reuse Load's last result. Press
+  Queue after the next verdict, or change the slug field and back.
+- **`public` needs cloudflared.** The daemon fetches it on first use; where
+  that fails, install `cloudflared` on the PATH. Without `public` the link
+  only works on this machine (or your LAN, if the daemon is bound to it).
+- **The graph walk is best effort.** It follows `images` back through VAE
+  Decode, KSampler, the text encoders and LoRA loaders to the checkpoint, and
+  writes where it stopped in `meta.walk`. Custom samplers, loop packs and
+  seed-per-image setups stop it; the `meta` input overrides anything it got
+  wrong, and the PNG carries the whole workflow regardless.
+- **Mixed sizes are resized.** A ComfyUI batch has one size, so Load resizes
+  any image whose size differs from the first card's (bilinear), and a B
+  batch of another size is resized to A's; the console says how many.
+- `ui.PreviewText` does not render on custom nodes in ComfyUI 0.39.0, so the
+  link is printed under the QR in the image (and on the console).
+- Built and tested against ComfyUI 0.39.0 (`requires-comfyui = ">=0.39.0"`);
+  an older ComfyUI prints one warning line at startup and may not load the
+  nodes. Images only for now; audio and video are later.
+
+## Development
+
+```
+tests/harness/setup_comfy.sh   # once: CPU ComfyUI 0.39.0 + two venvs in ~/.cache/comfyui-trainything
+tests/run.sh                   # the whole suite in the harness venv, then in a bare venv (Pillow + numpy)
+tests/harness/make_examples.py --check --shoot   # rebuild examples/*.json through the frontend, check them, re-take the screenshots
+```
+
+The tests start throwaway daemons (from `../trainything`, `TRAINYTHING_REPO`;
+it needs `pnpm build`) and throwaway CPU ComfyUIs on random ports, judge
+through the reviewer API, and never touch `~/.trainything` or port 4747.
+`tests/test_k4_install.py` is the stranger install: a fresh ComfyUI checkout,
+this repo `git clone`d into its `custom_nodes/`, the five nodes in
+`/object_info`. `docs/V3-NOTES.md` records what was verified against ComfyUI,
+with file and line. `TRAINYTHING_FORCE_REMOTE=1` is for tests only (a local
+daemon treated as remote).
+
+The agent half of every gate (K0–K4) passes. The owner's half of Gate K4, a
+real sampler and a phone, is still open: `docs/OWNER-RUN.md` is the
+checklist.
 
 | Path | What |
 |---|---|
-| `__init__.py` | ComfyUI entrypoint (`comfy_entrypoint`, V3 API) |
-| `nodes/` | the nodes: `review.py`, `send.py`, `wait.py`, `load.py`, `filter.py`; `inputs.py` (the shared schema); `common.py` (the shared logic, importable without ComfyUI) |
-| `examples/` | canvas workflows (drag onto ComfyUI) |
-| `trainything_client.py` | the owner API client, standard library only, sync and async |
-| `png.py` | IMAGE tensor <-> PNG with Save Image's `prompt` / `workflow` chunks |
-| `walk.py` | the graph walk: seed, sampler, prompts, checkpoint, LoRAs |
-| `split.py` | labels.jsonl -> accepted / rejected / contested / unjudged / per-option indices; Filter's rules |
-| `cards.py` | a batch -> cards; create-or-append by slug |
-| `docs/V3-NOTES.md` | what was verified against ComfyUI, with file:line |
-| `tests/` | pytest; see `tests/harness/README.md` |
+| `__init__.py` | the entrypoint (`comfy_entrypoint`, V3 API) and the ComfyUI version check |
+| `nodes/` | the five nodes; `inputs.py` the shared schema; `common.py` the shared logic, importable without ComfyUI |
+| `trainything_client.py` | the owner API client, standard library only |
+| `png.py`, `walk.py`, `split.py`, `cards.py` | PNG chunks; the graph walk; labels → indices; a batch → cards |
+| `examples/` | the canvas workflows and `dataset.py` |
 
-## Tests
+## License
 
-```
-tests/harness/setup_comfy.sh   # once: CPU ComfyUI + venvs in ~/.cache/comfyui-trainything
-tests/run.sh                   # everything, in both venvs
-tests/harness/make_examples.py --check --shoot   # rebuild examples/*.json, queue §5.2 through the frontend, the screenshots (headless Chromium)
-```
-
-MIT licensed.
+MIT; see `LICENSE`.

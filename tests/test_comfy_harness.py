@@ -6,6 +6,7 @@ checked by running code is checked here."""
 import json
 import os
 import random
+import re
 import signal
 import subprocess
 import sys
@@ -43,9 +44,9 @@ def run_in_comfy(code: str) -> str:
 
 
 def test_checkout_version_is_the_pin():
-    ns = {}
-    exec((COMFY / "comfyui_version.py").read_text(), ns)
-    assert ns["__version__"] == PINNED
+    # Read, not exec'd: comfy node validate flags exec anywhere in the repo.
+    text = (COMFY / "comfyui_version.py").read_text()
+    assert re.search(r'^__version__ = "([^"]+)"', text, re.M).group(1) == PINNED
     assert f'requires-comfyui = ">={PINNED}"' in (PACK / "pyproject.toml").read_text()
 
 

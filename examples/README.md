@@ -18,5 +18,24 @@ where Empty Latent is.
 from `tests/harness/example_prompts.py`; `--check` then queues the two §5.2
 workflows as the frontend would, with a scripted review between them, and
 the two Review examples (`ab-pair`, `choose-reasons`) with a scripted review
-while they wait. The dataset script
-arrives in K4.
+while they wait.
+
+## dataset.py
+
+§5.4 "a dataset of keepers with captions", a script rather than a node: it
+reads a run's folder (`results.json`, `labels.jsonl`, `blobs/`) and writes
+`<ref>.png` + `<ref>.txt` pairs, the convention LoRA trainers read. The
+caption is the card's `meta.prompt_text` (the graph walk's positive prompt, or
+your `meta` input), else the card's label, else the queue's prompt.
+Contested and unjudged cards are never taken. Standard library only.
+
+```
+python examples/dataset.py ComfyUI/output/trainything/sprites-08                      # keepers -> <folder>/dataset-accepted/
+python examples/dataset.py ComfyUI/output/trainything/sprites-08 --out ~/lora/witch   # somewhere else
+python examples/dataset.py ComfyUI/output/trainything/sprites-08 --rule rejected      # or option:<id> for choose / select
+```
+
+In `pair` mode it takes the winning side of each pair (`--rule rejected`: the
+losing side); the card's `meta` describes A, so a B winner is captioned from
+`meta.prompt_text_b` when your `meta` input set one, else from its label.
+
