@@ -1,0 +1,281 @@
+{
+ "1": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s001.png"
+  }
+ },
+ "2": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s002.png"
+  }
+ },
+ "3": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s003.png"
+  }
+ },
+ "4": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s004.png"
+  }
+ },
+ "5": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s005.png"
+  }
+ },
+ "6": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s006.png"
+  }
+ },
+ "7": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s007.png"
+  }
+ },
+ "8": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s008.png"
+  }
+ },
+ "9": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s009.png"
+  }
+ },
+ "10": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s010.png"
+  }
+ },
+ "11": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s011.png"
+  }
+ },
+ "12": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s012.png"
+  }
+ },
+ "13": {
+  "class_type": "BatchImagesNode",
+  "inputs": {
+   "images.image0": [
+    "1",
+    0
+   ],
+   "images.image1": [
+    "2",
+    0
+   ],
+   "images.image2": [
+    "3",
+    0
+   ],
+   "images.image3": [
+    "4",
+    0
+   ],
+   "images.image4": [
+    "5",
+    0
+   ],
+   "images.image5": [
+    "6",
+    0
+   ],
+   "images.image6": [
+    "7",
+    0
+   ],
+   "images.image7": [
+    "8",
+    0
+   ],
+   "images.image8": [
+    "9",
+    0
+   ],
+   "images.image9": [
+    "10",
+    0
+   ],
+   "images.image10": [
+    "11",
+    0
+   ],
+   "images.image11": [
+    "12",
+    0
+   ]
+  }
+ },
+ "14": {
+  "class_type": "EmptyLatentImage",
+  "inputs": {
+   "width": 64,
+   "height": 64,
+   "batch_size": 12
+  }
+ },
+ "20": {
+  "class_type": "TrainyThingReview",
+  "inputs": {
+   "images": [
+    "13",
+    0
+   ],
+   "latent": [
+    "14",
+    0
+   ],
+   "title": "K1 sprites",
+   "slug": "k1-gate",
+   "prompt": "Keep this sprite?",
+   "intro": "",
+   "mode": "single",
+   "options": "",
+   "feedback": "on_reject",
+   "identity": "name_email",
+   "order": "fixed",
+   "min_reviews": 1,
+   "public": false,
+   "project": "comfyui-k1",
+   "labels": "sprite 00\nsprite 01\nsprite 02\nsprite 03\nsprite 04\nsprite 05\nsprite 06\nsprite 07\nsprite 08\nsprite 09\nsprite 10\nsprite 11",
+   "meta": "{\"source\": \"k1-test\"}",
+   "timeout_minutes": 10.0,
+   "on_timeout": "partial"
+  }
+ },
+ "30": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "images": [
+    "20",
+    0
+   ],
+   "filename_prefix": "k1/accepted"
+  }
+ },
+ "31": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "images": [
+    "20",
+    1
+   ],
+   "filename_prefix": "k1/rejected"
+  }
+ },
+ "32": {
+  "class_type": "SaveLatent",
+  "inputs": {
+   "samples": [
+    "20",
+    2
+   ],
+   "filename_prefix": "k1/accepted_latent"
+  }
+ },
+ "33": {
+  "class_type": "PreviewAny",
+  "inputs": {
+   "source": [
+    "20",
+    4
+   ]
+  }
+ },
+ "34": {
+  "class_type": "PreviewAny",
+  "inputs": {
+   "source": [
+    "20",
+    5
+   ]
+  }
+ },
+ "35": {
+  "class_type": "PreviewAny",
+  "inputs": {
+   "source": [
+    "20",
+    6
+   ]
+  }
+ },
+ "36": {
+  "class_type": "PreviewAny",
+  "inputs": {
+   "source": [
+    "20",
+    7
+   ]
+  }
+ },
+ "37": {
+  "class_type": "PreviewAny",
+  "inputs": {
+   "source": [
+    "20",
+    8
+   ]
+  }
+ },
+ "38": {
+  "class_type": "ImageFromBatch",
+  "inputs": {
+   "image": [
+    "20",
+    3
+   ],
+   "batch_index": [
+    "20",
+    8
+   ],
+   "length": 1
+  }
+ },
+ "39": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "images": [
+    "38",
+    0
+   ],
+   "filename_prefix": "k1/by_index"
+  }
+ },
+ "40": {
+  "class_type": "PreviewAny",
+  "inputs": {
+   "source": [
+    "20",
+    9
+   ]
+  }
+ },
+ "41": {
+  "class_type": "PreviewAny",
+  "inputs": {
+   "source": [
+    "20",
+    10
+   ]
+  }
+ }
+}

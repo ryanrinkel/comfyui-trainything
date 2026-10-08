@@ -18,3 +18,4 @@ requires-comfyui = ">=0.39.0"  # verified at K0 against ComfyUI 0.39.0, comfy_ap
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["comfy: drives the harness ComfyUI (skipped without torch)"]

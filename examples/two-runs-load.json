@@ -1,0 +1,222 @@
+{
+ "last_node_id": 4,
+ "last_link_id": 3,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "TrainyThingLoad",
+   "title": "TrainyThing Load",
+   "pos": [
+    0,
+    0
+   ],
+   "size": [
+    320,
+    330
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "accepted",
+     "type": "IMAGE",
+     "links": [
+      1
+     ]
+    },
+    {
+     "name": "rejected",
+     "type": "IMAGE",
+     "links": null
+    },
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    },
+    {
+     "name": "labels",
+     "type": "STRING",
+     "links": null
+    },
+    {
+     "name": "summary",
+     "type": "STRING",
+     "links": [
+      2
+     ]
+    },
+    {
+     "name": "notes",
+     "type": "STRING",
+     "links": null
+    },
+    {
+     "name": "accepted_meta",
+     "type": "STRING",
+     "links": [
+      3
+     ]
+    },
+    {
+     "name": "accepted_indices",
+     "type": "INT",
+     "links": null,
+     "shape": 6
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TrainyThingLoad"
+   },
+   "widgets_values": [
+    "sprites-08",
+    false,
+    45
+   ]
+  },
+  {
+   "id": 2,
+   "type": "SaveImage",
+   "title": "Save the keepers",
+   "pos": [
+    420,
+    0
+   ],
+   "size": [
+    320,
+    300
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 1
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "trainything/run2-keepers"
+   ]
+  },
+  {
+   "id": 3,
+   "type": "PreviewAny",
+   "title": "Summary (rewrite the prompt from the notes)",
+   "pos": [
+    420,
+    340
+   ],
+   "size": [
+    420,
+    260
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "source",
+     "type": "*",
+     "link": 2
+    }
+   ],
+   "outputs": [
+    {
+     "name": "STRING",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [
+    null,
+    false
+   ]
+  },
+  {
+   "id": 4,
+   "type": "PreviewAny",
+   "title": "Keepers' meta (seeds, prompts)",
+   "pos": [
+    420,
+    640
+   ],
+   "size": [
+    420,
+    260
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "source",
+     "type": "*",
+     "link": 3
+    }
+   ],
+   "outputs": [
+    {
+     "name": "STRING",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [
+    null,
+    false
+   ]
+  }
+ ],
+ "links": [
+  [
+   1,
+   1,
+   0,
+   2,
+   0,
+   "IMAGE"
+  ],
+  [
+   2,
+   1,
+   4,
+   3,
+   0,
+   "STRING"
+  ],
+  [
+   3,
+   1,
+   6,
+   4,
+   0,
+   "STRING"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 1,
+   "offset": [
+    40,
+    40
+   ]
+  }
+ },
+ "version": 0.4
+}

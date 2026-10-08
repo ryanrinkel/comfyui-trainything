@@ -1,0 +1,1627 @@
+{
+ "id": "d8b19515-16e7-4e36-bec4-d9735eb86785",
+ "revision": 0,
+ "last_node_id": 34,
+ "last_link_id": 19,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    130
+   ],
+   "size": [
+    282.798828125,
+    314
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      1
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 01",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s001.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s001.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 2,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    362
+   ],
+   "size": [
+    282.798828125,
+    314
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      2
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 02",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s002.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s002.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 3,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    594
+   ],
+   "size": [
+    282.798828125,
+    314
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      3
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 03",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s003.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s003.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 4,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    826
+   ],
+   "size": [
+    282.798828125,
+    314
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      4
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 04",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s004.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s004.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 5,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    1058
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      5
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 05",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s005.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s005.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 6,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    1290
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      6
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 06",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s006.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s006.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 7,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    1522
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      7
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 07",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s007.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s007.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 8,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    1754
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      8
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 08",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s008.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s008.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 9,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    1986
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      9
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 09",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s009.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s009.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 10,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    2218
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      10
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 10",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s010.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s010.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 11,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    2450
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      11
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 11",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s011.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s011.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 12,
+   "type": "LoadImage",
+   "pos": [
+    100,
+    2682
+   ],
+   "size": [
+    282.798828125,
+    102
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image",
+     "name": "image",
+     "type": "COMBO",
+     "widget": {
+      "name": "image"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "choose file to upload",
+     "name": "upload",
+     "type": "IMAGEUPLOAD",
+     "widget": {
+      "name": "upload"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      12
+     ]
+    },
+    {
+     "localized_name": "MASK",
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "title": "Sprite 12",
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "s012.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "s012.png",
+    "upload": "image"
+   }
+  },
+  {
+   "id": 13,
+   "type": "BatchImagesNode",
+   "pos": [
+    482.798828125,
+    130
+   ],
+   "size": [
+    311.7447265625,
+    266
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "image0",
+     "name": "images.image0",
+     "type": "IMAGE",
+     "link": 1
+    },
+    {
+     "localized_name": "image1",
+     "name": "images.image1",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 2
+    },
+    {
+     "localized_name": "image2",
+     "name": "images.image2",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 3
+    },
+    {
+     "localized_name": "image3",
+     "name": "images.image3",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 4
+    },
+    {
+     "localized_name": "image4",
+     "name": "images.image4",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 5
+    },
+    {
+     "localized_name": "image5",
+     "name": "images.image5",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 6
+    },
+    {
+     "localized_name": "image6",
+     "name": "images.image6",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 7
+    },
+    {
+     "localized_name": "image7",
+     "name": "images.image7",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 8
+    },
+    {
+     "localized_name": "image8",
+     "name": "images.image8",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 9
+    },
+    {
+     "localized_name": "image9",
+     "name": "images.image9",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 10
+    },
+    {
+     "localized_name": "image10",
+     "name": "images.image10",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 11
+    },
+    {
+     "localized_name": "image11",
+     "name": "images.image11",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 12
+    },
+    {
+     "localized_name": "image12",
+     "name": "images.image12",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "IMAGE",
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      13
+     ]
+    }
+   ],
+   "title": "Batch Images (stands in for VAE Decode)",
+   "properties": {
+    "Node name for S&R": "BatchImagesNode"
+   }
+  },
+  {
+   "id": 14,
+   "type": "EmptyLatentImage",
+   "pos": [
+    100,
+    2914
+   ],
+   "size": [
+    270,
+    106
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "width",
+     "name": "width",
+     "type": "INT",
+     "widget": {
+      "name": "width"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "height",
+     "name": "height",
+     "type": "INT",
+     "widget": {
+      "name": "height"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "batch_size",
+     "name": "batch_size",
+     "type": "INT",
+     "widget": {
+      "name": "batch_size"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "LATENT",
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      14
+     ]
+    }
+   ],
+   "title": "Empty Latent (stands in for KSampler's latent)",
+   "properties": {
+    "Node name for S&R": "EmptyLatentImage"
+   },
+   "widgets_values": [
+    64,
+    64,
+    12
+   ],
+   "widgets_values_named": {
+    "width": 64,
+    "height": 64,
+    "batch_size": 12
+   }
+  },
+  {
+   "id": 20,
+   "type": "TrainyThingReview",
+   "pos": [
+    894.5435546875,
+    130
+   ],
+   "size": [
+    400,
+    708
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "link": 13
+    },
+    {
+     "localized_name": "latent",
+     "name": "latent",
+     "shape": 7,
+     "type": "LATENT",
+     "link": 14
+    },
+    {
+     "localized_name": "images_b",
+     "name": "images_b",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "localized_name": "title",
+     "name": "title",
+     "type": "STRING",
+     "widget": {
+      "name": "title"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "slug",
+     "name": "slug",
+     "type": "STRING",
+     "widget": {
+      "name": "slug"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "prompt",
+     "name": "prompt",
+     "type": "STRING",
+     "widget": {
+      "name": "prompt"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "intro",
+     "name": "intro",
+     "type": "STRING",
+     "widget": {
+      "name": "intro"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "mode",
+     "name": "mode",
+     "type": "COMBO",
+     "widget": {
+      "name": "mode"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "options",
+     "name": "options",
+     "type": "STRING",
+     "widget": {
+      "name": "options"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "feedback",
+     "name": "feedback",
+     "type": "COMBO",
+     "widget": {
+      "name": "feedback"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "identity",
+     "name": "identity",
+     "type": "COMBO",
+     "widget": {
+      "name": "identity"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "order",
+     "name": "order",
+     "type": "COMBO",
+     "widget": {
+      "name": "order"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "min_reviews",
+     "name": "min_reviews",
+     "type": "INT",
+     "widget": {
+      "name": "min_reviews"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "public",
+     "name": "public",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "public"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "project",
+     "name": "project",
+     "type": "STRING",
+     "widget": {
+      "name": "project"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "timeout_minutes",
+     "name": "timeout_minutes",
+     "type": "FLOAT",
+     "widget": {
+      "name": "timeout_minutes"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "on_timeout",
+     "name": "on_timeout",
+     "type": "COMBO",
+     "widget": {
+      "name": "on_timeout"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "labels",
+     "name": "labels",
+     "shape": 7,
+     "type": "STRING",
+     "widget": {
+      "name": "labels"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "meta",
+     "name": "meta",
+     "shape": 7,
+     "type": "STRING",
+     "widget": {
+      "name": "meta"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "accepted",
+     "name": "accepted",
+     "type": "IMAGE",
+     "links": [
+      15
+     ]
+    },
+    {
+     "localized_name": "rejected",
+     "name": "rejected",
+     "type": "IMAGE",
+     "links": [
+      16
+     ]
+    },
+    {
+     "localized_name": "accepted_latent",
+     "name": "accepted_latent",
+     "type": "LATENT",
+     "links": null
+    },
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    },
+    {
+     "localized_name": "labels",
+     "name": "labels",
+     "type": "STRING",
+     "links": null
+    },
+    {
+     "localized_name": "summary",
+     "name": "summary",
+     "type": "STRING",
+     "links": [
+      18
+     ]
+    },
+    {
+     "localized_name": "notes",
+     "name": "notes",
+     "type": "STRING",
+     "links": [
+      17
+     ]
+    },
+    {
+     "localized_name": "accepted_meta",
+     "name": "accepted_meta",
+     "type": "STRING",
+     "links": [
+      19
+     ]
+    },
+    {
+     "localized_name": "accepted_indices",
+     "name": "accepted_indices",
+     "shape": 6,
+     "type": "INT",
+     "links": null
+    },
+    {
+     "localized_name": "link",
+     "name": "link",
+     "type": "STRING",
+     "links": null
+    },
+    {
+     "localized_name": "slug",
+     "name": "slug",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TrainyThingReview"
+   },
+   "widgets_values": [
+    "Sprites",
+    "sprites-gate",
+    "Keep this sprite?",
+    "",
+    "single",
+    "",
+    "on_reject",
+    "name_email",
+    "coverage",
+    1,
+    false,
+    "comfyui",
+    45,
+    "partial",
+    "",
+    ""
+   ],
+   "widgets_values_named": {
+    "title": "Sprites",
+    "slug": "sprites-gate",
+    "prompt": "Keep this sprite?",
+    "intro": "",
+    "mode": "single",
+    "options": "",
+    "feedback": "on_reject",
+    "identity": "name_email",
+    "order": "coverage",
+    "min_reviews": 1,
+    "public": false,
+    "project": "comfyui",
+    "timeout_minutes": 45,
+    "on_timeout": "partial",
+    "labels": "",
+    "meta": ""
+   }
+  },
+  {
+   "id": 30,
+   "type": "SaveImage",
+   "pos": [
+    1394.5435546875,
+    130
+   ],
+   "size": [
+    270,
+    58
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "link": 15
+    },
+    {
+     "localized_name": "filename_prefix",
+     "name": "filename_prefix",
+     "type": "STRING",
+     "widget": {
+      "name": "filename_prefix"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "title": "Save the keepers",
+   "properties": {},
+   "widgets_values": [
+    "trainything/accepted"
+   ],
+   "widgets_values_named": {
+    "filename_prefix": "trainything/accepted"
+   }
+  },
+  {
+   "id": 31,
+   "type": "SaveImage",
+   "pos": [
+    1394.5435546875,
+    318
+   ],
+   "size": [
+    270,
+    58
+   ],
+   "flags": {},
+   "order": 16,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "link": 16
+    },
+    {
+     "localized_name": "filename_prefix",
+     "name": "filename_prefix",
+     "type": "STRING",
+     "widget": {
+      "name": "filename_prefix"
+     },
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "images",
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "title": "Save the rejects",
+   "properties": {},
+   "widgets_values": [
+    "trainything/rejected"
+   ],
+   "widgets_values_named": {
+    "filename_prefix": "trainything/rejected"
+   }
+  },
+  {
+   "id": 32,
+   "type": "PreviewAny",
+   "pos": [
+    1394.5435546875,
+    758
+   ],
+   "size": [
+    210,
+    122
+   ],
+   "flags": {},
+   "order": 18,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "source",
+     "name": "source",
+     "type": "*",
+     "link": 17
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "STRING",
+     "name": "STRING",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "title": "Rejection notes",
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "widgets_values_named": {}
+  },
+  {
+   "id": 33,
+   "type": "PreviewAny",
+   "pos": [
+    1394.5435546875,
+    506
+   ],
+   "size": [
+    210,
+    122
+   ],
+   "flags": {},
+   "order": 17,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "source",
+     "name": "source",
+     "type": "*",
+     "link": 18
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "STRING",
+     "name": "STRING",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "title": "Summary",
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "widgets_values_named": {}
+  },
+  {
+   "id": 34,
+   "type": "PreviewAny",
+   "pos": [
+    1394.5435546875,
+    1010
+   ],
+   "size": [
+    210,
+    122
+   ],
+   "flags": {},
+   "order": 19,
+   "mode": 0,
+   "inputs": [
+    {
+     "localized_name": "source",
+     "name": "source",
+     "type": "*",
+     "link": 19
+    }
+   ],
+   "outputs": [
+    {
+     "localized_name": "STRING",
+     "name": "STRING",
+     "type": "STRING",
+     "links": null
+    }
+   ],
+   "title": "Keepers' meta (seeds, prompts)",
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "widgets_values_named": {}
+  }
+ ],
+ "links": [
+  [
+   1,
+   1,
+   0,
+   13,
+   0,
+   "IMAGE"
+  ],
+  [
+   2,
+   2,
+   0,
+   13,
+   1,
+   "IMAGE"
+  ],
+  [
+   3,
+   3,
+   0,
+   13,
+   2,
+   "IMAGE"
+  ],
+  [
+   4,
+   4,
+   0,
+   13,
+   3,
+   "IMAGE"
+  ],
+  [
+   5,
+   5,
+   0,
+   13,
+   4,
+   "IMAGE"
+  ],
+  [
+   6,
+   6,
+   0,
+   13,
+   5,
+   "IMAGE"
+  ],
+  [
+   7,
+   7,
+   0,
+   13,
+   6,
+   "IMAGE"
+  ],
+  [
+   8,
+   8,
+   0,
+   13,
+   7,
+   "IMAGE"
+  ],
+  [
+   9,
+   9,
+   0,
+   13,
+   8,
+   "IMAGE"
+  ],
+  [
+   10,
+   10,
+   0,
+   13,
+   9,
+   "IMAGE"
+  ],
+  [
+   11,
+   11,
+   0,
+   13,
+   10,
+   "IMAGE"
+  ],
+  [
+   12,
+   12,
+   0,
+   13,
+   11,
+   "IMAGE"
+  ],
+  [
+   13,
+   13,
+   0,
+   20,
+   0,
+   "IMAGE"
+  ],
+  [
+   14,
+   14,
+   0,
+   20,
+   1,
+   "LATENT"
+  ],
+  [
+   15,
+   20,
+   0,
+   30,
+   0,
+   "IMAGE"
+  ],
+  [
+   16,
+   20,
+   1,
+   31,
+   0,
+   "IMAGE"
+  ],
+  [
+   17,
+   20,
+   6,
+   32,
+   0,
+   "STRING"
+  ],
+  [
+   18,
+   20,
+   5,
+   33,
+   0,
+   "STRING"
+  ],
+  [
+   19,
+   20,
+   7,
+   34,
+   0,
+   "STRING"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 1,
+   "offset": [
+    0,
+    0
+   ]
+  }
+ },
+ "version": 0.4
+}

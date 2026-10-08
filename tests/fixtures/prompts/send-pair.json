@@ -1,0 +1,279 @@
+{
+ "1": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s001.png"
+  }
+ },
+ "2": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s002.png"
+  }
+ },
+ "3": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s003.png"
+  }
+ },
+ "4": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s004.png"
+  }
+ },
+ "5": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s005.png"
+  }
+ },
+ "6": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s006.png"
+  }
+ },
+ "7": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s007.png"
+  }
+ },
+ "8": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s008.png"
+  }
+ },
+ "9": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s009.png"
+  }
+ },
+ "10": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s010.png"
+  }
+ },
+ "11": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s011.png"
+  }
+ },
+ "12": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s012.png"
+  }
+ },
+ "13": {
+  "class_type": "BatchImagesNode",
+  "inputs": {
+   "images.image0": [
+    "1",
+    0
+   ],
+   "images.image1": [
+    "2",
+    0
+   ],
+   "images.image2": [
+    "3",
+    0
+   ],
+   "images.image3": [
+    "4",
+    0
+   ],
+   "images.image4": [
+    "5",
+    0
+   ],
+   "images.image5": [
+    "6",
+    0
+   ],
+   "images.image6": [
+    "7",
+    0
+   ],
+   "images.image7": [
+    "8",
+    0
+   ],
+   "images.image8": [
+    "9",
+    0
+   ],
+   "images.image9": [
+    "10",
+    0
+   ],
+   "images.image10": [
+    "11",
+    0
+   ],
+   "images.image11": [
+    "12",
+    0
+   ]
+  }
+ },
+ "51": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s012.png"
+  }
+ },
+ "52": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s011.png"
+  }
+ },
+ "53": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s010.png"
+  }
+ },
+ "54": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s009.png"
+  }
+ },
+ "55": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s008.png"
+  }
+ },
+ "56": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s007.png"
+  }
+ },
+ "57": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s006.png"
+  }
+ },
+ "58": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s005.png"
+  }
+ },
+ "59": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s004.png"
+  }
+ },
+ "60": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s003.png"
+  }
+ },
+ "61": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s002.png"
+  }
+ },
+ "62": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "s001.png"
+  }
+ },
+ "63": {
+  "class_type": "BatchImagesNode",
+  "inputs": {
+   "images.image0": [
+    "51",
+    0
+   ],
+   "images.image1": [
+    "52",
+    0
+   ],
+   "images.image2": [
+    "53",
+    0
+   ],
+   "images.image3": [
+    "54",
+    0
+   ],
+   "images.image4": [
+    "55",
+    0
+   ],
+   "images.image5": [
+    "56",
+    0
+   ],
+   "images.image6": [
+    "57",
+    0
+   ],
+   "images.image7": [
+    "58",
+    0
+   ],
+   "images.image8": [
+    "59",
+    0
+   ],
+   "images.image9": [
+    "60",
+    0
+   ],
+   "images.image10": [
+    "61",
+    0
+   ],
+   "images.image11": [
+    "62",
+    0
+   ]
+  }
+ },
+ "20": {
+  "class_type": "TrainyThingSend",
+  "inputs": {
+   "images": [
+    "13",
+    0
+   ],
+   "images_b": [
+    "63",
+    0
+   ],
+   "title": "K1 sprites",
+   "slug": "k1-pair",
+   "prompt": "Which one?",
+   "intro": "",
+   "mode": "pair",
+   "options": "",
+   "feedback": "optional",
+   "identity": "name_email",
+   "order": "fixed",
+   "min_reviews": 1,
+   "public": false,
+   "project": "comfyui-k1",
+   "labels": "",
+   "meta": "{\"source\": \"k1-test\"}"
+  }
+ }
+}

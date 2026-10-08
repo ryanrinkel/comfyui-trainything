@@ -84,7 +84,7 @@ def test_v3_api_facts():
         spec.loader.exec_module(mod)
         ext = asyncio.run(mod.comfy_entrypoint())
         facts["extension"] = isinstance(ext, ComfyExtension)
-        facts["node_list"] = asyncio.run(ext.get_node_list())
+        facts["node_list"] = sorted(n.define_schema().node_id for n in asyncio.run(ext.get_node_list()))
         print(json.dumps(facts))
         """
     )
@@ -102,7 +102,7 @@ def test_v3_api_facts():
         "progress_bar": True,
         "node_output_block": True,
         "extension": True,
-        "node_list": [],
+        "node_list": ["TrainyThingReview", "TrainyThingSend", "TrainyThingWait"],
     }
 
 
