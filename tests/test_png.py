@@ -49,7 +49,7 @@ def test_torch_tensor(sprite_batch):
 
 
 def test_qr_dependency_makes_a_png():
-    """§10 question 4: one pure-Python QR encoder (segno, no dependencies of
+    """One pure-Python QR encoder (segno, no dependencies of
     its own) renders the link to a PNG Pillow can read."""
     segno = pytest.importorskip("segno")
     import io

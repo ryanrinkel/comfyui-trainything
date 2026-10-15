@@ -1,6 +1,6 @@
-"""Gate K3 (PLAN-COMFY §8): pair mode and options in a real ComfyUI on CPU.
+"""pair mode and options in a real ComfyUI on CPU.
 
-One throwaway daemon and ComfyUI for the module (as K1 and K2); the graphs
+One throwaway daemon and ComfyUI for the module (as the other ComfyUI tests); the graphs
 are tests/fixtures/prompts/ab-pair.json and options.json (build.py).
 
 Clause -> test:
@@ -60,7 +60,7 @@ def env(tmp_path_factory):
 
 
 # ---------------------------------------------------------------------------
-# helpers (as K2's)
+# helpers (as the Load tests')
 # ---------------------------------------------------------------------------
 
 
@@ -122,7 +122,7 @@ def review_run(comfy, daemon, prompt, slug, decide, notes=None, timeout=120) -> 
 
 
 # ---------------------------------------------------------------------------
-# §5.3: A and B
+# Pair: A and B
 # ---------------------------------------------------------------------------
 
 B_WINS = {1, 3, 8, 10}
@@ -192,7 +192,7 @@ def test_ab_pair_gate(env):
 
 
 # ---------------------------------------------------------------------------
-# §5.4: the reasons, counted (choose) and defects, tagged (select)
+# Choose and select: the reasons, counted, and defects, tagged
 # ---------------------------------------------------------------------------
 
 CHOOSE = {1: "hair", 4: "hair", 9: "hair", 0: "scarf", 5: "scarf", 2: "hands", 7: "hands", 10: "hands", 11: "hands",

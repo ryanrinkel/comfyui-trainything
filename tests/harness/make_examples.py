@@ -1,6 +1,6 @@
 """Builds examples/*.json (canvas workflows) from example_prompts.py through the
 harness ComfyUI's frontend, and (with --shoot) takes the README screenshot of
-the Review node: docs/screenshots/review-node.png.
+the Review node: assets/screenshots/review-node.png.
 
     ~/.cache/comfyui-trainything/venv/bin/python tests/harness/make_examples.py [--check] [--shoot]
 
@@ -32,11 +32,11 @@ from example_prompts import EXAMPLES  # noqa: E402
 import groups  # noqa: E402
 
 EXAMPLES_DIR = PACK / "examples"
-SHOTS = PACK / "docs" / "screenshots"
+SHOTS = PACK / "assets" / "screenshots"
 
 
 def check(root: Path, comfy: Comfy, daemon) -> None:
-    """§5.2 through the frontend: the API prompts the frontend would queue for
+    """through the frontend: the API prompts the frontend would queue for
     two-runs-send.json and two-runs-load.json, submitted; run 1 makes
     sprites-08, a scripted reviewer keeps 8, run 2 loads and filters them."""
     from reviewer import Reviewer
@@ -56,7 +56,7 @@ def check(root: Path, comfy: Comfy, daemon) -> None:
     assert len(saves) == 1 and len(saves[0]["images"]) == 8, h["outputs"]
     print("check: two-runs-send then two-runs-load queued from the frontend; 8 keepers saved")
 
-    # K3: the two Review examples hold the run, so the review happens while
+    # The two Review examples hold the run, so the review happens while
     # they wait. ab-pair: A for the first 7 cards served, B for the next 4,
     # skip the last; choose-reasons: the four tags in turn (3 hair).
     def queue_and_review(name: str, slug: str, decide) -> dict:

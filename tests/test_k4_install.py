@@ -1,5 +1,4 @@
-"""Gate K4: the stranger install (PLAN-COMFY §6.5, §12 "installs by `git
-clone` into `custom_nodes/`"), done the way the README says.
+"""The stranger install, done the way the README says.
 
 A second ComfyUI checkout (``git clone --shared`` of the harness one, so no
 download; the harness venv is its python), the pack ``git clone``d from this

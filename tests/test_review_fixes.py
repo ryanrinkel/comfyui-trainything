@@ -1,4 +1,4 @@
-"""The twelve findings of the K0-K4 review, without ComfyUI or a daemon:
+"""The twelve findings of the independent review, without ComfyUI or a daemon:
 fakes for the client, numpy arrays for the batches. The daemon half is in
 test_review_fixes_daemon.py, the ComfyUI half in test_review_fixes_comfy.py.
 

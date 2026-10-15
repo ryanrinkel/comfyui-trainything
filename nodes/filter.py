@@ -1,4 +1,4 @@
-"""TrainyThing Filter (PLAN-COMFY §4.5): any batch, the labels, a rule -> the
+"""TrainyThing Filter: any batch, the labels, a rule -> the
 subset. The only node that knows nothing about the daemon."""
 
 from __future__ import annotations

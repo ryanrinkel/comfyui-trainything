@@ -1,4 +1,4 @@
-"""TrainyThing Send (PLAN-COMFY §4.2): the batch becomes a queue; the link and a
+"""TrainyThing Send: the batch becomes a queue; the link and a
 QR show on the node; the run goes on."""
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ async def send_from_inputs(cls, images, *, title, slug, prompt, intro, mode, opt
         prompt_text=c.intro_prompt(graph, node_id, facts, mode),
     )
     # --disable-metadata: no prompt / workflow chunk in the uploaded PNGs, as
-    # Save Image (§6.3); the walk above has already filled meta from the graph.
+    # Save Image; the walk above has already filled meta from the graph.
     no_meta = c.metadata_disabled()
     client = await c.connect()
     handle = await c.send(

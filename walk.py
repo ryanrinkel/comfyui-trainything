@@ -1,4 +1,4 @@
-"""The graph walk (PLAN-COMFY §6.4).
+"""The graph walk.
 
 ComfyUI's hidden ``prompt`` is the API-format graph, ``{id: {class_type,
 inputs}}``, where a linked input is ``[source_id, output_index]``. From the
@@ -206,7 +206,7 @@ class _Walk:
 
 
 def walk_graph(prompt: Optional[Dict[str, Any]], node_id: Any, images_input: str = "images") -> Dict[str, Any]:
-    """The facts §6.4 lists, from the node ``node_id`` back along its
+    """The facts lists, from the node ``node_id`` back along its
     ``images_input``. Keys present only when found: ``seed``, ``steps``,
     ``cfg``, ``sampler``, ``scheduler``, ``denoise``, ``prompt_text``,
     ``negative_text``, ``checkpoint``, ``batch_size``, ``width``, ``height``;

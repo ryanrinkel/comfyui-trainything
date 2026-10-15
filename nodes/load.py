@@ -1,4 +1,4 @@
-"""TrainyThing Load (PLAN-COMFY §4.4): a later run reads a queue back by name,
+"""TrainyThing Load: a later run reads a queue back by name,
 images included, so verdicts collected an hour or a week ago feed a new graph."""
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ class TrainyThingLoad(io.ComfyNode):
 
     @classmethod
     async def fingerprint_inputs(cls, slug, wait=False, timeout_minutes=c.DEFAULT_TIMEOUT_MIN, **kwargs):
-        # ComfyUI reuses the last outputs while this value repeats (§4.4).
+        # ComfyUI reuses the last outputs while this value repeats.
         return await c.load_fingerprint(slug)
 
     @classmethod

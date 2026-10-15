@@ -1,4 +1,4 @@
-"""TrainyThing Wait (PLAN-COMFY §4.3): hold the run until the queue a Send made
+"""TrainyThing Wait: hold the run until the queue a Send made
 is done (or the timeout), then split the batch by the verdicts."""
 
 from __future__ import annotations

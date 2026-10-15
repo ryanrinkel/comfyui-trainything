@@ -1,4 +1,4 @@
-# NOT TO BE ENABLED BEFORE GATE N (the rename; PLAN-COMFY §10 question 8).
+# Publishes to the Comfy Registry.
 # A registry version can never be overwritten, only bumped, and the package
 # name, PublisherId and DisplayName in pyproject.toml are the brand. Until gate
 # N: no REGISTRY_ACCESS_TOKEN secret in the repository (without it this job

@@ -1,6 +1,6 @@
 # Examples
 
-Canvas workflows (PLAN-COMFY §5): drag one onto ComfyUI. They are built on
+Canvas workflows: drag one onto ComfyUI. They are built on
 Load Image and the twelve sprites in `tests/fixtures/sprites`, so they run
 with no model: copy those PNGs into ComfyUI's `input/` folder first. In a real
 graph, VAE Decode's output goes where Batch Images is, and KSampler's latent
@@ -8,21 +8,20 @@ where Empty Latent is.
 
 | File | What |
 |---|---|
-| `gate.json` | §5.1: Review inside the run; the keepers and the rejects saved, the notes, the summary and the keepers' meta shown |
-| `two-runs-send.json` | §5.2 run 1: Send to `sprites-08` and finish; queue it again and the queue grows |
-| `two-runs-load.json` | §5.2 run 2: TrainyThing Load reads `sprites-08` back; TrainyThing Filter `accepted` passes the keepers on (Save Image stands in for VAE Encode → KSampler); the summary and the keepers' meta shown |
-| `ab-pair.json` | §5.3: Review in pair mode, A and B on one card; `accepted` is the winners (from either side), `rejected` the losers; `preferences.jsonl` in `output/trainything/sprites-ab/` |
-| `choose-reasons.json` | §5.4 "the reasons, counted": Review in choose mode with four reason tags (`hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine`); the summary counts them; TrainyThing Filter `option hair` → Save Image |
+| `gate.json` | Review inside the run; the keepers and the rejects saved, the notes, the summary and the keepers' meta shown |
+| `two-runs-send.json` | Run 1: Send to `sprites-08` and finish; queue it again and the queue grows |
+| `two-runs-load.json` | Run 2: TrainyThing Load reads `sprites-08` back; TrainyThing Filter `accepted` passes the keepers on (Save Image stands in for VAE Encode → KSampler); the summary and the keepers' meta shown |
+| `ab-pair.json` | Review in pair mode, A and B on one card; `accepted` is the winners (from either side), `rejected` the losers; `preferences.jsonl` in `output/trainything/sprites-ab/` |
+| `choose-reasons.json` | The reasons, counted: Review in choose mode with four reason tags (`hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine`); the summary counts them; TrainyThing Filter `option hair` → Save Image |
 
 `tests/harness/make_examples.py` rebuilds them through the frontend itself,
-from `tests/harness/example_prompts.py`; `--check` then queues the two §5.2
-workflows as the frontend would, with a scripted review between them, and
+from `tests/harness/example_prompts.py`; `--check` then queues the two workflows as the frontend would, with a scripted review between them, and
 the two Review examples (`ab-pair`, `choose-reasons`) with a scripted review
 while they wait.
 
 ## dataset.py
 
-§5.4 "a dataset of keepers with captions", a script rather than a node: it
+A dataset of keepers with captions, a script rather than a node: it
 reads a run's folder (`results.json`, `labels.jsonl`, `blobs/`) and writes
 `<ref>.png` + `<ref>.txt` pairs, the convention LoRA trainers read. The
 caption is the card's `meta.prompt_text` (the graph walk's positive prompt, or

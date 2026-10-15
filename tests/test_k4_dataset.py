@@ -1,5 +1,4 @@
-"""K4: examples/dataset.py (PLAN-COMFY §5.4, "a dataset of keepers with
-captions"). A run's folder is built the way Review / Wait write it
+"""examples/dataset.py. A run's folder is built the way Review / Wait write it
 (``write_run_folder_sync`` against a throwaway daemon, no ComfyUI), then the
 script turns it into <ref>.png + <ref>.txt pairs. A second folder, written by
 hand, covers pair and select mode. The script runs with ``python -S``: the

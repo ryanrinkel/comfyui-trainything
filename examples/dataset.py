@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A dataset of keepers with captions (PLAN-COMFY §5.4): a run's folder ->
+"""A dataset of keepers with captions: a run's folder ->
 <ref>.png + <ref>.txt pairs, the convention LoRA trainers read.
 
     python examples/dataset.py ComfyUI/output/trainything/<slug> [--out DIR] [--rule accepted|rejected|option:<id>]

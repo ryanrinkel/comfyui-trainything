@@ -1,4 +1,4 @@
-"""labels.jsonl -> batch indices (PLAN-COMFY §4.3, §4.5). Pure.
+"""labels.jsonl -> batch indices. Pure.
 
 A labels line is the daemon's ``LabelLine`` (``src/core/results/labels.ts``):
 ``{ref, label, verdict, (accept, reject, skip | counts), n, contested, notes}``
@@ -81,7 +81,7 @@ class Split:
     lines: List[Optional[Dict[str, Any]]] = field(default_factory=list)
 
     def indices(self, rule: str, option_id: Optional[str] = None) -> List[int]:
-        """Filter's rules (§4.5)."""
+        """Filter's rules."""
         if rule == "accepted":
             return list(self.accepted)
         if rule == "rejected":
@@ -102,7 +102,7 @@ def split_labels(
     refs: Sequence[str],
     mode: str,
 ) -> Split:
-    """The §4.3 split of one run's cards. ``refs[i]`` is batch index ``i``."""
+    """The split of one run's cards. ``refs[i]`` is batch index ``i``."""
     if mode not in MODES:
         raise ValueError(f"unknown mode: {mode}")
     by_ref: Dict[str, Dict[str, Any]] = {}
@@ -155,7 +155,7 @@ def take(batch: Sequence[Any], indices: Sequence[int]) -> List[Any]:
 
 
 # ---------------------------------------------------------------------------
-# Filter (§4.5): labels lines -> indices, knowing nothing about the daemon
+# Filter: labels lines -> indices, knowing nothing about the daemon
 # ---------------------------------------------------------------------------
 
 
@@ -224,7 +224,7 @@ def filter_pick(
     rule: str,
     option_id: Optional[str] = None,
 ) -> Picked:
-    """Filter's rules over a labels.jsonl (§4.5), with the side of each pick.
+    """Filter's rules over a labels.jsonl, with the side of each pick.
 
     ``accepted`` / ``rejected`` (single: the verdict; pair: every card with a
     winner, both sets, ``sides`` saying which image won or lost),

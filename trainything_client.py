@@ -1,4 +1,4 @@
-"""The owner API client for the TrainyThing daemon (PLAN-COMFY §6.2, §4.7).
+"""The owner API client for the TrainyThing daemon.
 
 Standard library only. It mirrors the daemon's ``src/client.ts`` method for
 method, so an error on one side reads like the other's:
@@ -42,7 +42,7 @@ DEFAULT_PORT = 4747
 MAX_BLOB_BYTES = 200 * 1024 * 1024
 #: How long one ``/health`` probe may take (client.ts ``HEALTH_TIMEOUT_MS``).
 HEALTH_TIMEOUT_S = 1.5
-#: Budget for the one ``trainything list`` auto-start attempt (§4.7).
+#: Budget for the one ``trainything list`` auto-start attempt.
 AUTO_START_TIMEOUT_S = 15.0
 #: Ordinary request timeout. Uploads and bundles get longer.
 REQUEST_TIMEOUT_S = 30.0
@@ -79,7 +79,7 @@ class ClientError(Exception):
 
 
 class NoDaemonError(ClientError):
-    """Nothing answered ``/health``; the message is the one line of §4.7."""
+    """Nothing answered ``/health``; the message is the one line"""
 
     def __init__(self, base_url: str) -> None:
         super().__init__(no_daemon_message(base_url), 0, None)
@@ -185,7 +185,7 @@ def resolve_token(token: Optional[str] = None, home: Optional[str] = None) -> Op
 #: Test-only: when set to ``1``, ``is_local_url`` says no for every URL, so a
 #: daemon on 127.0.0.1 is treated as remote (no auto-start; the run's folder
 #: and Load read ``results/bundle.zip`` instead of asking the daemon to write
-#: files). The K2 gate uses it for "remote in all but name".
+#: files). The Load tests use it for "remote in all but name".
 FORCE_REMOTE_ENV = "TRAINYTHING_FORCE_REMOTE"
 
 
@@ -421,7 +421,7 @@ class TrainyThingClient:
     def bundle(self, id_or_slug: str, dest_dir: str) -> List[str]:
         """``GET /api/queues/:id/results/bundle.zip``, unpacked into ``dest_dir``:
         ``results.json`` plus ``blobs/<sha><ext>``. Works against a remote
-        daemon (§10 question 5). Returns the paths written."""
+        daemon. Returns the paths written."""
         os.makedirs(dest_dir, exist_ok=True)
         root = os.path.realpath(dest_dir)
         written: List[str] = []
@@ -486,7 +486,7 @@ def _say(line: str) -> None:
 
 def autostart_command() -> Optional[List[str]]:
     """What starts a local daemon: a ``trainything`` binary on the PATH first,
-    else ``npx -y trainything list`` (§10 question 3's default), else None."""
+    else ``npx -y trainything list``, else None."""
     binary = shutil.which("trainything")
     if binary is not None:
         return [binary, "list"]
@@ -514,7 +514,7 @@ def autostart_env(base_url: str, home: Optional[str]) -> Dict[str, str]:
 
 def _run_autostart(base_url: str, home: Optional[str], budget: float) -> None:
     """``trainything list`` once (the PATH binary, else ``npx -y``); the CLI
-    auto-starts the daemon for a local URL (design §8.2). Failure of any kind
+    auto-starts the daemon for a local URL (design ). Failure of any kind
     is fine: the probe decides."""
     cmd = autostart_command()
     if cmd is None:
@@ -544,7 +544,7 @@ def connect(
     timeout: float = AUTO_START_TIMEOUT_S,
     _starter: Optional[Callable[[str, Optional[str], float], None]] = None,
 ) -> TrainyThingClient:
-    """A ready client, or ``NoDaemonError`` with the one line of §4.7.
+    """A ready client, or ``NoDaemonError`` with the one line
 
     When ``/health`` does not answer and the URL is local (and ``auto_start``),
     run ``trainything list`` (the PATH binary, else ``npx -y``) once within ``timeout`` seconds, then

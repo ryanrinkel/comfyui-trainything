@@ -1,4 +1,4 @@
-"""Writes the API-format prompts the K1 tests submit (``python build.py``).
+"""Writes the API-format prompts the ComfyUI tests submit (``python build.py``).
 
 Every graph starts from the twelve sprites (``tests/fixtures/sprites``, copied
 into ComfyUI's input folder) through Load Image and Batch Images, so no model
@@ -8,11 +8,11 @@ Each output of the TrainyThing node goes to something whose ``ui`` lands in
 Preview as Text (core's ``PreviewAny``) for the strings and the index list.
 The tests patch ``slug``, ``labels``, ``timeout_minutes`` and ``on_timeout``.
 
-K2 adds ``send`` (Send only, the batch also saved as it went in, so Load's
+The Load tests add ``send`` (Send only, the batch also saved as it went in, so Load's
 images can be compared with it) and ``load-filter`` (Load, every socket
 observed, and one Filter per rule over Load's images and labels).
 
-K3 adds ``ab-pair`` (§5.3: Review in pair mode over A = the sprites and B =
+The pair and options tests add ``ab-pair`` (Review in pair mode over A = the sprites and B =
 the sprites reversed, a latent wired, both batches saved as they went in, and
 Filter accepted / rejected with both batches and accepted with A only) and
 ``options`` (Review in choose mode with the four reason tags, one Filter per
@@ -69,7 +69,7 @@ def observers(g, src):
 
 
 def gate():
-    """§5.1 on sprites: Review with the batch and a latent."""
+    """on sprites: Review with the batch and a latent."""
     g = {}
     sources(g)
     g["20"] = {"class_type": "TrainyThingReview", "inputs": {"images": ["13", 0], "latent": ["14", 0], **SEND, **WAIT}}
@@ -92,7 +92,7 @@ def send_wait():
 
 
 def send_pair():
-    """§5.3's shape: images and images_b (the batch reversed) into a pair Send."""
+    """'s shape: images and images_b (the batch reversed) into a pair Send."""
     g = {}
     sources(g, latent=False)
     for i, name in enumerate(reversed(SPRITES), start=51):
@@ -104,7 +104,7 @@ def send_pair():
 
 
 def send():
-    """Send only (§5.2 run 1), and Save Image of the batch Send was given."""
+    """Send only, and Save Image of the batch Send was given."""
     g = {}
     sources(g, latent=False)
     g["20"] = {"class_type": "TrainyThingSend", "inputs": {"images": ["13", 0], **dict(SEND, slug="k2-send")}}
@@ -117,7 +117,7 @@ FILTER_RULES = {"80": ("accepted", ""), "81": ("rejected", ""), "82": ("unjudged
 
 
 def load_filter():
-    """§5.2 run 2: Load by slug, every socket observed; Filter per rule over
+    """run 2: Load by slug, every socket observed; Filter per rule over
     Load's images and labels (80 also slices a latent: EmptyLatentImage 79,
     whose batch_size the tests set to the queue's size). Per Filter 8k:
     Save Image 9k, Preview as Text of indices 10k and count 11k."""
@@ -162,7 +162,7 @@ def _filter(g, nid, inputs, prefix):
 
 
 def ab_pair():
-    """§5.3: twelve pairs on one Review; Filter over its labels with both
+    """Pair: twelve pairs on one Review; Filter over its labels with both
     batches (80 accepted, with a latent; 81 rejected) and with A only (82)."""
     g = {}
     sources(g)
@@ -188,7 +188,7 @@ TAGS = "hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine"
 
 
 def options():
-    """§5.4 "the reasons, counted": Review in choose mode with four reason
+    """"the reasons, counted": Review in choose mode with four reason
     tags; Filter 80..83 per tag, 84 accepted (empty by design)."""
     g = {}
     sources(g)

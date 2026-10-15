@@ -1,4 +1,4 @@
-"""PNG in and out (PLAN-COMFY §6.3).
+"""PNG in and out.
 
 ``encode_png`` writes an image the way ComfyUI's Save Image does
 (``nodes.py`` ``SaveImage.save_images``): ``255 * image``, clipped, uint8,
@@ -8,7 +8,7 @@ one chunk per key of ``extra_pnginfo`` (``json.dumps(value)``), which is how
 the graph that made it.
 
 ``decode_png`` reads one back into a ``[H, W, C]`` float32 array in 0..1 (for
-Load, K2) with its text chunks.
+Load) with its text chunks.
 
 numpy and Pillow are imported lazily, and torch never: a tensor is accepted
 by duck typing (``.cpu().numpy()``), so the module imports without either.

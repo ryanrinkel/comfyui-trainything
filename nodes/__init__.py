@@ -1,4 +1,4 @@
-"""The nodes (PLAN-COMFY §4): Review, Send, Wait (K1), Load and Filter (K2).
+"""The nodes: Review, Send, Wait, Load and Filter.
 
 ``NODE_LIST`` is resolved on first use (PEP 562), because the node classes
 need ``comfy_api`` and torch while ``nodes.common`` must also import in a

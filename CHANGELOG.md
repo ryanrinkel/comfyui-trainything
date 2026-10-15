@@ -20,8 +20,7 @@
 
 ## 0.1.0 — 2026-10-08
 
-The first version (PLAN-COMFY K0–K4). Not published to the Comfy Registry:
-that waits for gate N, the final name.
+The first version. Not yet on the Comfy Registry.
 
 **Five nodes**, under *TrainyThing* (ComfyUI V3 node API, `comfy_api.latest`,
 ComfyUI ≥ 0.39.0):
@@ -48,31 +47,31 @@ environment or `~/.trainything/config.json`, never from a widget.
 Also: `examples/` (five canvas workflows and `dataset.py`, keepers to
 `<ref>.png` + `<ref>.txt`), a one-line warning on a ComfyUI older than the
 pin, `pyproject.toml` with `[tool.comfy]`, and a registry publish workflow
-that is not to be enabled before gate N.
+that is not enabled yet.
 
-**Gates passed** (the agent half; tests in `tests/`, run by `tests/run.sh`
-on a CPU ComfyUI 0.39.0 against throwaway daemons):
+**Verified** (tests in `tests/`, run by `tests/run.sh` on a CPU ComfyUI
+0.39.0 against throwaway daemons):
 
-- **K0**, the client and the contract: 12 images → 12 cards with refs, labels
+- **The client and the contract**: 12 images → 12 cards with refs, labels
   and `meta`; PNG `prompt` / `workflow` chunks round-trip; the graph walk on
   a saved SDXL + LoRA graph; URL and token precedence as the CLI's; the split
   rules in all four modes; the missing-daemon line.
-- **K1**, Send, Wait and Review: the gate workflow, 8 kept and 4 rejected
+- **Send, Wait and Review**: the gate workflow, 8 kept and 4 rejected
   with notes, the run's folder; append across runs; cancel; timeout
   `partial` and `block`; zero rejects blocks only that branch; ComfyUI stays
   responsive during the wait.
-- **K2**, Load and Filter: run 2 loads 24 images back within PNG rounding
+- **Load and Filter**: run 2 loads 24 images back within PNG rounding
   with the `meta` Send attached; Filter by every rule; Load re-runs only on a
   new judgment; a remote daemon through the bundle.
-- **K3**, pair and options: twelve A/B pairs, `accepted` from both sides,
+- **Pair and options**: twelve A/B pairs, `accepted` from both sides,
   `preferences.jsonl` of eleven lines, the skipped pair unjudged; a `choose`
   queue's counts and Filter per option.
-- **K4**, packaging: `git clone` into a fresh ComfyUI's `custom_nodes/` lists
-  the five nodes; the dataset script. The owner's real-sampler run is open
-  (`docs/OWNER-RUN.md`).
+- **Packaging**: `git clone` into a fresh ComfyUI's `custom_nodes/` lists
+  the five nodes; the dataset script. A real-sampler run on a phone is the
+  remaining manual check.
 
-**Review fixes** (an independent review of K0–K4; each has a test in
-`tests/test_review_fixes*.py`, details in `docs/V3-NOTES.md`):
+**Review fixes** (an independent review; each has a test in
+`tests/test_review_fixes*.py`):
 
 1. Wait and Review check `images_b` (pair) and the latent's size before the
    wait, not after it.

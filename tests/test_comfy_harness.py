@@ -1,6 +1,6 @@
-"""The ComfyUI side (§6.1), against the CPU checkout tests/harness/setup_comfy.sh
+"""The ComfyUI side, against the CPU checkout tests/harness/setup_comfy.sh
 installs at ~/.cache/comfyui-trainything. Runs only in the harness venv (torch
-importable); elsewhere it skips. Every claim in docs/V3-NOTES.md that can be
+importable); elsewhere it skips. Every claim about the V3 node API the pack relies on that can be
 checked by running code is checked here."""
 
 import json

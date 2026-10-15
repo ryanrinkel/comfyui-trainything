@@ -1,10 +1,9 @@
-# Comfy Registry metadata (docs.comfy.org/registry/specifications). Nothing is
-# published before gate N (PLAN-COMFY §10 question 8): the name, PublisherId and
-# DisplayName are the brand and may change with the rename. The registry asks
-# for names without "ComfyUI" in them; this one stays until gate N.
+# Comfy Registry metadata (docs.comfy.org/registry/specifications). The registry
+# asks for names without "ComfyUI" in them, so the registry name is plain
+# "trainything"; the repository keeps its comfyui- prefix.
 
 [project]
-name = "comfyui-trainything"
+name = "trainything"
 description = "Send a ComfyUI batch to a phone for review with TrainyThing; the keepers, the notes and the seeds come back into the graph."
 version = "0.1.0"
 license = { file = "LICENSE" }
@@ -19,13 +18,13 @@ Documentation = "https://github.com/ryanrinkel/comfyui-trainything#readme"
 "Bug Tracker" = "https://github.com/ryanrinkel/comfyui-trainything/issues"
 
 [tool.comfy]
-PublisherId = "trainything"  # placeholder until gate N (PLAN-COMFY §10 question 8)
+PublisherId = "trainything"
 DisplayName = "TrainyThing"
 # The registry wants an Icon URL (square, <= 400x400); there is no public URL
 # until the repository is public, so it stays empty until then.
 Icon = ""
 includes = []
-requires-comfyui = ">=0.39.0"  # verified at K0 against ComfyUI 0.39.0, comfy_api latest (docs/V3-NOTES.md); __init__.REQUIRES_COMFYUI
+requires-comfyui = ">=0.39.0"  # verified against ComfyUI 0.39.0, comfy_api latest; __init__.REQUIRES_COMFYUI
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

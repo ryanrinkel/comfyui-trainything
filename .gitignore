@@ -8,3 +8,6 @@ output/
 ComfyUI/
 .cache/
 *.egg-info/
+
+# Planning and working notes stay local; they are not part of the published repo
+docs/

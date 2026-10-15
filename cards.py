@@ -1,4 +1,4 @@
-"""A batch of images -> cards in a queue (PLAN-COMFY §4.2). No ComfyUI import.
+"""A batch of images -> cards in a queue. No ComfyUI import.
 
     run = make_run_id(node_id)                       # "<time>-n<node id>-<4 hex>"
     handle = send_batch(client, images, queue_config, run=run, prompt=..., ...)
@@ -122,7 +122,7 @@ def parse_meta_input(text: Optional[str], count: int) -> List[Dict[str, Any]]:
     raise ValueError("meta must be a JSON object, an array of objects, or JSON lines")
 
 
-#: §10 question 7, per mode: what the reviewer is asked to do with the prompt.
+#: Per mode: what the reviewer is asked to do with the prompt.
 INTRO_ASK = {
     "single": "Reject anything that misses it.",
     "pair": "Pick the one that matches it better.",
@@ -132,7 +132,7 @@ INTRO_ASK = {
 
 
 def default_intro(prompt_text: Optional[str], mode: str = "single") -> Optional[str]:
-    """§10 question 7: the intro when the widget is left empty, worded for
+    """The intro when the widget is left empty, worded for
     the mode (single rejects, pair picks one of two, choose picks one answer,
     select ticks any). No prompt found: no intro."""
     if not prompt_text or not str(prompt_text).strip():
@@ -297,7 +297,7 @@ def send_batch(
     upload each image, add the cards. ``prompt`` / ``extra_pnginfo`` None
     writes no ``prompt`` / ``workflow`` chunk (``--disable-metadata``).
 
-    Returns the queue handle §4.2 describes: ``{base_url, slug, queue_id,
+    Returns the queue handle: ``{base_url, slug, queue_id,
     link, share_url, mode, refs, added, total, created}``."""
     pngs = encode_batch(images, prompt, extra_pnginfo)
     pngs_b = encode_batch(images_b, prompt, extra_pnginfo) if images_b is not None else None

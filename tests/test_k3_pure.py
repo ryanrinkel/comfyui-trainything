@@ -1,4 +1,4 @@
-"""K3 without ComfyUI: options parsed and checked, feedback and the intro per
+"""Without ComfyUI: options parsed and checked, feedback and the intro per
 mode, notes per mode, Filter's sides on pair labels, select matched on either
 id, and (with torch) the pair / choose sockets of split_outputs."""
 
@@ -26,7 +26,7 @@ def line(ref, verdict, **kw):
     return out
 
 
-# --- intro (§10 question 7) --------------------------------------------------
+# --- intro --------------------------------------------------
 
 
 def test_default_intro_reads_in_every_mode():

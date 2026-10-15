@@ -1,13 +1,13 @@
-"""Gate K2 (PLAN-COMFY §8): Load and Filter in a real ComfyUI on CPU.
+"""Load and Filter in a real ComfyUI on CPU.
 
-One throwaway daemon and ComfyUI for the module (as K1), plus, for the remote
+One throwaway daemon and ComfyUI for the module (as the Send tests), plus, for the remote
 clause, a second daemon (its own TRAINYTHING_HOME, another port) and a second
 ComfyUI pointed at it with TRAINYTHING_FORCE_REMOTE=1, so the pack treats it
 as remote and reads results/bundle.zip; that daemon never writes a file into
 ComfyUI's folders.
 
 Clause -> test:
-  Run 2 of §5.2 against the queue K1 left (two Send+Wait runs of 12, same
+  Run 2 against the queue the Send tests left (two Send+Wait runs of 12, same
   slug, 8 accepted + 4 rejected each): Load returns 24 images matching the
   uploaded tensors to within PNG rounding; accepted_meta matches what Send
   attached; Filter accepted -> 16, rejected -> 8 ....... test_run2_load_filter
@@ -107,7 +107,7 @@ def send_prompt(slug: str, **send) -> dict:
 
 
 def send_wait_prompt(slug: str, run_no: int) -> dict:
-    """K1's Send + Wait, and the batch Send was given saved as it went in.
+    """Send + Wait, and the batch Send was given saved as it went in.
     The labels differ per run, or ComfyUI would reuse the first Send."""
     p = load_prompt("send-wait")
     p["20"]["inputs"]["slug"] = slug
@@ -161,7 +161,7 @@ def test_run2_load_filter(env):
     daemon, comfy = env
     slug = "k2-sprites"
     sent, wait_meta = [], []
-    # The queue K1 leaves: two Send + Wait runs of 12 with one slug, 8 + 4 each.
+    # The queue the Send tests leave: two Send + Wait runs of 12 with one slug, 8 + 4 each.
     for n in (12, 24):
         pid = comfy.submit(send_wait_prompt(slug, n // 12))
         wait_cards(daemon, slug, n)

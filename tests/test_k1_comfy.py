@@ -1,4 +1,4 @@
-"""Gate K1 (PLAN-COMFY §8): Send, Wait and Review in a real ComfyUI on CPU.
+"""Send, Wait and Review in a real ComfyUI on CPU.
 
 One throwaway daemon and one throwaway ComfyUI (tests/comfyrun.py) for the
 module; each test submits an API-format prompt from tests/fixtures/prompts

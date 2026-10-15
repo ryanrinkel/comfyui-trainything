@@ -1,4 +1,4 @@
-"""K2 without ComfyUI: Filter's rules over labels.jsonl (split.filter_indices),
+"""Without ComfyUI: Filter's rules over labels.jsonl (split.filter_indices),
 Load's card reading (nodes/common.py: image cards, blob paths, a whole queue
 as one run, mixed sizes) and Load's fingerprint against a throwaway daemon."""
 

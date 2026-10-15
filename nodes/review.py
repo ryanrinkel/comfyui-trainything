@@ -1,4 +1,4 @@
-"""TrainyThing Review (PLAN-COMFY §4.1, §4.3): Send then Wait in one node. The
+"""TrainyThing Review: Send then Wait in one node. The
 batch and its latent stay in memory across the wait; the QR is on the node
 (as the running node's preview) before the wait starts."""
 

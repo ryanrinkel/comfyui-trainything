@@ -1,11 +1,11 @@
-"""What Send, Wait and Review share (PLAN-COMFY §4.2, §4.3, §4.6, §4.7).
+"""What Send, Wait and Review share.
 
 Nothing here imports ComfyUI at module level: torch, ``comfy`` and
 ``folder_paths`` are imported inside the functions that need them, so the pure
 parts (the queue config, the notes, the meta, the labels for a run) are tested
 in a plain venv.
 
-    client  = await connect()                        # §4.7: health, one auto-start, the one line
+    client  = await connect()                        # health, one auto-start, the one line
     config  = queue_config(title=..., mode=..., ...) # the POST /api/queues body
     handle  = await send(client, images, config, ...)
     status  = await wait_until_done(client, handle, timeout_s, interrupted=...)
@@ -46,7 +46,7 @@ FEEDBACKS = ["on_reject", "optional", "off", "required"]
 IDENTITIES = ["name_email", "anonymous"]
 ORDERS = ["coverage", "fixed"]
 ON_TIMEOUT = ["partial", "block"]
-#: §4.3: poll /status this often.
+#: poll /status this often.
 POLL_S = 2.0
 #: A daemon that does not answer (or answers 5xx) during a wait is retried
 #: after 2 s, 4 s, 8 s, ... at most 30 s apart, until the deadline.
@@ -55,11 +55,11 @@ RETRY_MAX_S = 30.0
 #: How often the wait looks at ComfyUI's interrupt flag between polls.
 INTERRUPT_CHECK_S = 0.25
 DEFAULT_TIMEOUT_MIN = 45.0
-#: The folder under ComfyUI's output directory (§4.3 "The run's folder").
+#: The folder under ComfyUI's output directory.
 OUTPUT_SUBDIR = "trainything"
 LOAD_LATER = "TrainyThing Load will read it later"
 
-#: The outputs of Wait, in socket order (§4.6); Review adds link and slug.
+#: The outputs of Wait, in socket order; Review adds link and slug.
 WAIT_OUTPUTS = (
     "accepted",
     "rejected",
@@ -79,20 +79,20 @@ def say(line: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# §4.7: find the daemon
+# find the daemon
 # ---------------------------------------------------------------------------
 
 
 async def connect() -> AsyncTrainyThingClient:
     """The daemon from ``TRAINYTHING_URL`` / ``_TOKEN``, then config.json, then
     127.0.0.1:4747; one ``trainything list`` (the PATH binary, else ``npx -y
-    trainything list``) when a local one does not answer; else ``NoDaemonError`` whose message is the one line of §4.7.
+    trainything list``) when a local one does not answer; else ``NoDaemonError`` whose message is the one line
     Never a widget: the token is read from the environment or the config."""
     return await connect_async()
 
 
 # ---------------------------------------------------------------------------
-# The queue config (§4.2)
+# The queue config
 # ---------------------------------------------------------------------------
 
 
@@ -165,7 +165,7 @@ def queue_config(
     in the other modes (the daemon refuses them there). ``feedback:
     on_reject`` has no reject to hang on outside single, and the daemon reads
     it as ``optional`` there (src/core/serving.ts), so it is sent as
-    ``optional``, with a console line. An empty ``intro`` is §10 question 7's
+    ``optional``, with a console line. An empty ``intro`` is the
     default, worded for the mode."""
     if mode not in MODES:
         raise ValueError(f"unknown mode {mode!r} (want one of {', '.join(MODES)})")
@@ -220,7 +220,7 @@ async def send(
 ) -> Dict[str, Any]:
     """Create-or-append, share when ``public`` (before any upload; a failure
     is the local link and a console line), encode, upload, add the cards
-    (cards.send_batch, on a worker thread). Returns the queue handle (§4.2)."""
+    (cards.send_batch, on a worker thread). Returns the queue handle."""
     run = make_run_id(node_id)
     handle = await asyncio.to_thread(
         send_batch,
@@ -242,7 +242,7 @@ async def send(
 
 def metadata_disabled() -> bool:
     """ComfyUI's ``--disable-metadata``: Save Image then writes no ``prompt``
-    / ``workflow`` chunk, and neither does Send (§6.3). False outside ComfyUI."""
+    / ``workflow`` chunk, and neither does Send. False outside ComfyUI."""
     try:
         from comfy.cli_args import args
     except Exception:
@@ -251,7 +251,7 @@ def metadata_disabled() -> bool:
 
 
 def graph_facts(prompt: Any, node_id: Any) -> Dict[str, Any]:
-    """The §6.4 walk from this node's ``images`` input; never raises."""
+    """The walk from this node's ``images`` input; never raises."""
     try:
         return walk_graph(prompt, node_id, "images")
     except Exception as err:  # best effort by design
@@ -283,7 +283,7 @@ def send_line(handle: Dict[str, Any]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# The QR (§4.2 "On the node", §10 question 4)
+# The QR
 # ---------------------------------------------------------------------------
 
 
@@ -335,7 +335,7 @@ def qr_tensor(link: str, caption: Optional[str] = None) -> Any:
 
 
 # ---------------------------------------------------------------------------
-# Progress and interrupt (§4.3)
+# Progress and interrupt
 # ---------------------------------------------------------------------------
 
 
@@ -461,7 +461,7 @@ def left_open_line(slug: Any) -> str:
 
 
 # ---------------------------------------------------------------------------
-# This run's verdicts (§4.3 "The split", §4.6)
+# This run's verdicts
 # ---------------------------------------------------------------------------
 
 
@@ -525,7 +525,7 @@ def _option_order(run: "RunResults") -> List[str]:
 
 
 def notes_text(run: "RunResults") -> str:
-    """§4.6 ``notes``, one note per line, each prefixed by its card's label
+    """``notes``, one note per line, each prefixed by its card's label
     (the card's ref when it has none). Skip notes are never in it.
 
     - single: the rejection notes only, in batch order.
@@ -569,7 +569,7 @@ def notes_text(run: "RunResults") -> str:
 
 
 def meta_json(run: "RunResults", indices: Sequence[int], default_index: bool = True) -> str:
-    """§4.6 ``accepted_meta``: a JSON array of those cards' ``meta``, each
+    """``accepted_meta``: a JSON array of those cards' ``meta``, each
     with ``position``, its position in this node's batch (what
     ``accepted_indices`` lists). ``index`` is never overwritten: it is the
     index in the batch Send was given (the sampler's), what Latent From Batch
@@ -615,7 +615,7 @@ async def collect(client: AsyncTrainyThingClient, handle: Dict[str, Any]) -> Run
 
 
 # ---------------------------------------------------------------------------
-# Tensors (§6.1): slice IMAGE and LATENT by batch index, as core does
+# Tensors: slice IMAGE and LATENT by batch index, as core does
 # ---------------------------------------------------------------------------
 
 
@@ -720,7 +720,7 @@ def split_outputs(
     images_b: Any = None,
     default_index: bool = True,
 ) -> List[Any]:
-    """The nine Wait sockets of §4.6, in order. ``default_index``: see
+    """The nine Wait sockets, in order. ``default_index``: see
     ``meta_json`` (Load passes False). An empty ``accepted`` or
     ``rejected`` (and ``accepted_latent`` / ``accepted_indices`` with it) is a
     silent blocker on that socket only."""
@@ -816,7 +816,7 @@ def result_line(run: RunResults) -> str:
 
 
 # ---------------------------------------------------------------------------
-# The run's folder (§4.3): output/trainything/<slug>/
+# The run's folder: output/trainything/<slug>/
 # ---------------------------------------------------------------------------
 
 
@@ -941,7 +941,7 @@ async def wait_and_split(
 
 
 # ---------------------------------------------------------------------------
-# Load (§4.4): a queue read back by name, images from the blob store
+# Load: a queue read back by name, images from the blob store
 # ---------------------------------------------------------------------------
 
 #: The outputs of Load, in socket order: Wait's minus ``accepted_latent``.
@@ -985,7 +985,7 @@ def load_handle(found: Dict[str, Any], base_url: str) -> Dict[str, Any]:
 
 
 async def load_fingerprint(slug: str) -> str:
-    """§4.4: what decides whether ComfyUI may reuse Load's last outputs. The
+    """What decides whether ComfyUI may reuse Load's last outputs. The
     queue's id, card count, judgment count, status, closed time (``/status``
     and the queue row) and ``last_activity_at`` (the queue list's entry: the
     newest judgment or reviewer visit): it moves when a verdict lands (an

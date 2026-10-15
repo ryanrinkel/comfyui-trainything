@@ -1,9 +1,9 @@
-"""The graph walk of §6.4 on a saved graph.
+"""The graph walk on a saved graph.
 
 tests/fixtures/graph-sdxl-lora.json stands in for the owner's real export
 (Load Checkpoint -> LoraLoader -> two CLIPTextEncode, EmptyLatentImage batch
 12 -> KSampler -> VAEDecode -> SaveImage, plus the Review node), built from
-the class and input names in ComfyUI's nodes.py. Gate K4's owner step
+the class and input names in ComfyUI's nodes.py. The owner's step
 replaces it with a graph exported from a real ComfyUI."""
 
 import copy
@@ -89,9 +89,9 @@ def test_no_graph():
 OWNER_GRAPH = __import__("pathlib").Path(__file__).resolve().parent / "fixtures" / "graph-owner.json"
 
 
-@__import__("pytest").mark.skipif(not OWNER_GRAPH.exists(), reason="no tests/fixtures/graph-owner.json yet (docs/OWNER-RUN.md)")
+@__import__("pytest").mark.skipif(not OWNER_GRAPH.exists(), reason="no tests/fixtures/graph-owner.json yet (the owner's exported graph)")
 def test_walk_on_the_owners_graph():
-    """Gate K4's owner step: the owner's real graph, exported as API JSON.
+    """The owner's step: the owner's real graph, exported as API JSON.
     From every TrainyThing Review / Send in it, the walk reaches the sampler,
     the prompts and the checkpoint."""
     import json

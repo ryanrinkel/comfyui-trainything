@@ -1,4 +1,4 @@
-"""A missing daemon fails with the one line of §4.7."""
+"""A missing daemon fails with the one line"""
 
 import asyncio
 import time

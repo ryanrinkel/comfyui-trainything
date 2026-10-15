@@ -1,6 +1,6 @@
 # TrainyThing for ComfyUI
 
-![TrainyThing Review waiting on the canvas: the link and its QR on the node](docs/screenshots/review-node-waiting.png)
+![TrainyThing Review waiting on the canvas: the link and its QR on the node](assets/screenshots/review-node-waiting.png)
 
 Wire **TrainyThing Review** after VAE Decode and press Queue: the batch becomes
 a TrainyThing review queue, the node shows its link and a QR, and the run waits.
@@ -364,13 +364,8 @@ it needs `pnpm build`) and throwaway CPU ComfyUIs on random ports, judge
 through the reviewer API, and never touch `~/.trainything` or port 4747.
 `tests/test_k4_install.py` is the stranger install: a fresh ComfyUI checkout,
 this repo `git clone`d into its `custom_nodes/`, the five nodes in
-`/object_info`. `docs/V3-NOTES.md` records what was verified against ComfyUI,
-with file and line. `TRAINYTHING_FORCE_REMOTE=1` is for tests only (a local
+`/object_info`. `TRAINYTHING_FORCE_REMOTE=1` is for tests only (a local
 daemon treated as remote).
-
-The agent half of every gate (K0–K4) passes. The owner's half of Gate K4, a
-real sampler and a phone, is still open: `docs/OWNER-RUN.md` is the
-checklist.
 
 | Path | What |
 |---|---|

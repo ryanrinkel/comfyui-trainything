@@ -1,4 +1,4 @@
-"""The V3 schema pieces Send, Wait and Review share (PLAN-COMFY §4.2, §4.3, §4.6).
+"""The V3 schema pieces Send, Wait and Review share.
 Imported only inside ComfyUI (it needs ``comfy_api``)."""
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from comfy_api.latest import io
 
 from . import common as c
 
-#: Only a Send's ``queue`` connects to a Wait's (§4.2 "Out").
+#: Only a Send's ``queue`` connects to a Wait's.
 TrainyThingQueue = io.Custom(c.QUEUE_TYPE)
 
 
@@ -17,13 +17,13 @@ def _text(id: str, default: str, tooltip: str, multiline: bool = False, optional
           advanced: bool = False) -> io.String.Input:
     # dynamic_prompts off: the frontend would rewrite {a|b} inside JSON meta.
     # advanced: hidden until "Show advanced inputs" (frontend >= 1.5x), so a
-    # fresh node shows the essentials only (§4.2 "a few things if wanted").
+    # fresh node shows the essentials only.
     return io.String.Input(id, default=default, multiline=multiline, dynamic_prompts=False, optional=optional,
                            tooltip=tooltip, advanced=advanced or None)
 
 
 def send_inputs() -> List[io.Input]:
-    """§4.2: images and the queue settings. The token is never one of them.
+    """Images and the queue settings. The token is never one of them.
     The essentials come first (images, title, prompt, mode, public); the rest
     is advanced and web/trainything.js keeps it folded until "more settings"."""
     return [
@@ -47,7 +47,7 @@ def send_inputs() -> List[io.Input]:
 
 
 def wait_inputs() -> List[io.Input]:
-    """§4.3: how long, and what a timeout does."""
+    """How long, and what a timeout does."""
     return [
         io.Float.Input("timeout_minutes", default=c.DEFAULT_TIMEOUT_MIN, min=0.1, max=10080.0, step=0.1, round=0.01,
                        tooltip="How long to wait for the phone before the run moves on. The batch stays open on the dashboard either way.", advanced=True),
@@ -57,7 +57,7 @@ def wait_inputs() -> List[io.Input]:
 
 
 def wait_outputs() -> List[io.Output]:
-    """§4.6, in socket order (``common.WAIT_OUTPUTS``)."""
+    """The outputs, in socket order (``common.WAIT_OUTPUTS``)."""
     return [
         io.Image.Output("accepted", display_name="accepted", tooltip="The pictures the reviewer kept."),
         io.Image.Output("rejected", display_name="rejected", tooltip="The pictures the reviewer rejected."),

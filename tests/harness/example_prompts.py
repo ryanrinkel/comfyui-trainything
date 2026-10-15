@@ -1,4 +1,4 @@
-"""The API-format graphs behind examples/*.json (PLAN-COMFY §5), built on Load
+"""The API-format graphs behind examples/*.json, built on Load
 Image and the twelve sprites so they run with no model. make_examples.py turns
 them into canvas workflows through the frontend itself."""
 
@@ -44,7 +44,7 @@ def _save(g, nid, src, prefix, title):
 
 
 def gate():
-    """§5.1: review inside the run. The empty latent stands in for KSampler's."""
+    """Review inside the run. The empty latent stands in for KSampler's."""
     g = {}
     _loads(g, 1, SPRITES, "Sprite")
     _batch(g, 13, 1, "Batch Images (stands in for VAE Decode)")
@@ -61,7 +61,7 @@ def gate():
 
 
 def two_runs_send():
-    """§5.2 run 1: send and finish; queue it again and the queue grows."""
+    """Run 1: send and finish; queue it again and the queue grows."""
     g = {}
     _loads(g, 1, SPRITES, "Sprite")
     _batch(g, 13, 1, "Batch Images (stands in for VAE Decode)")
@@ -72,7 +72,7 @@ def two_runs_send():
 
 
 def ab_pair():
-    """§5.3: A and B on one card, same seeds, two settings. Here A is the
+    """Pair: A and B on one card, same seeds, two settings. Here A is the
     sprites and B the same sprites in another order (the second half first,
     so both batches are 64x64)."""
     g = {}
@@ -94,7 +94,7 @@ REASONS = "hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine"
 
 
 def choose_reasons():
-    """§5.4 "the reasons, counted": choose with four reason tags; the labels
+    """The reasons, counted: choose with four reason tags; the labels
     carry the counts; Filter option hair -> the images with the hair problem."""
     g = {}
     _loads(g, 1, SPRITES, "Sprite")
@@ -112,7 +112,7 @@ def choose_reasons():
 
 
 def two_runs_load():
-    """§5.2 run 2: Load reads sprites-08 back; Filter accepted -> the keepers
+    """Run 2: Load reads sprites-08 back; Filter accepted -> the keepers
     (Save Image stands in for VAE Encode -> KSampler); the summary and the
     keepers' meta shown, to rewrite the prompt and reuse the seeds."""
     g = {}

@@ -1,4 +1,4 @@
-"""Gate K0 against a throwaway daemon: a 12-image batch becomes 12 cards
+"""Against a throwaway daemon: a 12-image batch becomes 12 cards
 with kind image, explicit refs, labels and meta; the uploaded PNG round-trips
 its prompt and workflow chunks; the token is in no chunk; create, append and
 closed; results inline, --out and the bundle; the async face."""
