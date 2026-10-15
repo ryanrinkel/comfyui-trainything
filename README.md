@@ -31,13 +31,6 @@ npx -y trainything dashboard                  # once: starts the daemon and open
 ComfyUI Manager's "Install via Git URL" with the same URL does the same clone
 and install. The Comfy Registry comes later (after the name is final).
 
-**Until the npm publish.** The `trainything` npm package is not published yet,
-so `npx -y trainything` does not work today. Until it is, run the daemon from
-the trainything repository: `pnpm install && pnpm build` once, then
-`node dist/cli.js dashboard`. The nodes' own auto-start (`npx -y trainything
-list` when no daemon answers on this machine) fails the same way and the node
-says what to run.
-
 Try it without a model: copy `tests/fixtures/sprites/*.png` into ComfyUI's
 `input/`, drag `examples/gate.json` onto the canvas, press Run, scan the QR.
 
@@ -61,9 +54,8 @@ needs `TRAINYTHING_URL` pointing at a daemon it can reach.
 
 When a local daemon does not answer, the node tries once to start it (15 s
 budget), with a console line naming how: a `trainything` binary on the PATH
-first, else `npx -y trainything list`. Until the npm publish the PATH binary
-is the one that works (`trainything` on npm is not ours yet, and `npx -y`
-would run whatever is published there). `TRAINYTHING_TOKEN` is passed to that
+first, else `npx -y trainything list` (the daemon is on npm as `trainything`,
+0.1.0 and up). `TRAINYTHING_TOKEN` is passed to that
 command only when `TRAINYTHING_URL` is set too; otherwise the CLI reads the
 token from `config.json` itself.
 

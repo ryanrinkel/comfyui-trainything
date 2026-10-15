@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The daemon is on npm: `trainything` 0.1.0 (2026-10-15), so `npx -y trainything
+  dashboard` is the install line and the nodes' auto-start works as written.
+  The README's pre-publish workaround is gone. The pack's own repository is
+  public at github.com/ryanrinkel/comfyui-trainything.
 - Every input and output has a plain-language tooltip (2026-10-15).
 - The nodes come coloured (`web/trainything.js`, `WEB_DIRECTORY`), and a fresh
   Review or Send shows the essentials only: `images`, `title`, `prompt`,

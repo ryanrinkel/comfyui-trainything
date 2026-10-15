@@ -485,9 +485,8 @@ def _say(line: str) -> None:
 
 
 def autostart_command() -> Optional[List[str]]:
-    """What starts a local daemon: a ``trainything`` binary on the PATH
-    first (the one that works until the npm publish), else ``npx -y
-    trainything list`` (§10 question 3's default), else None."""
+    """What starts a local daemon: a ``trainything`` binary on the PATH first,
+    else ``npx -y trainything list`` (§10 question 3's default), else None."""
     binary = shutil.which("trainything")
     if binary is not None:
         return [binary, "list"]
