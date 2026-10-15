@@ -28,8 +28,10 @@ python -m pip install -r requirements.txt     # the python ComfyUI runs with (it
 npx -y trainything dashboard                  # once: starts the daemon and opens its dashboard
 ```
 
-ComfyUI Manager's "Install via Git URL" with the same URL does the same clone
-and install. The Comfy Registry comes later (after the name is final).
+Or from the Comfy Registry, where the pack is `trainything`: search for
+TrainyThing in ComfyUI Manager, or `comfy node install trainything`.
+ComfyUI Manager's "Install via Git URL" with the repository URL does the
+same clone and install.
 
 Try it without a model: copy `tests/fixtures/sprites/*.png` into ComfyUI's
 `input/`, drag `examples/gate.json` onto the canvas, press Run, scan the QR.
