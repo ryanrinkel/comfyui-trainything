@@ -1,5 +1,5 @@
 {
- "id": "fc4cd38a-ec6f-4364-9a93-0c95cedc65ec",
+ "id": "752f81c9-66bb-4d7e-94ba-410e38ab7f2c",
  "revision": 0,
  "last_node_id": 21,
  "last_link_id": 14,
@@ -890,7 +890,7 @@
    ],
    "size": [
     400,
-    500
+    194
    ],
    "flags": {},
    "order": 13,
@@ -919,15 +919,6 @@
      "link": null
     },
     {
-     "localized_name": "slug",
-     "name": "slug",
-     "type": "STRING",
-     "widget": {
-      "name": "slug"
-     },
-     "link": null
-    },
-    {
      "localized_name": "prompt",
      "name": "prompt",
      "type": "STRING",
@@ -937,20 +928,38 @@
      "link": null
     },
     {
-     "localized_name": "intro",
-     "name": "intro",
-     "type": "STRING",
-     "widget": {
-      "name": "intro"
-     },
-     "link": null
-    },
-    {
      "localized_name": "mode",
      "name": "mode",
      "type": "COMBO",
      "widget": {
       "name": "mode"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "public",
+     "name": "public",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "public"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "slug",
+     "name": "slug",
+     "type": "STRING",
+     "widget": {
+      "name": "slug"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "intro",
+     "name": "intro",
+     "type": "STRING",
+     "widget": {
+      "name": "intro"
      },
      "link": null
     },
@@ -996,15 +1005,6 @@
      "type": "INT",
      "widget": {
       "name": "min_reviews"
-     },
-     "link": null
-    },
-    {
-     "localized_name": "public",
-     "name": "public",
-     "type": "BOOLEAN",
-     "widget": {
-      "name": "public"
      },
      "link": null
     },
@@ -1065,36 +1065,40 @@
    },
    "widgets_values": [
     "Sprites",
-    "sprites-08",
     "Keep this sprite?",
-    "",
     "single",
+    false,
+    false,
+    "sprites-08",
+    "",
     "",
     "on_reject",
     "name_email",
     "coverage",
     1,
-    false,
     "comfyui",
     "",
     ""
    ],
    "widgets_values_named": {
     "title": "Sprites",
-    "slug": "sprites-08",
     "prompt": "Keep this sprite?",
-    "intro": "",
     "mode": "single",
+    "public": false,
+    "more settings": false,
+    "slug": "sprites-08",
+    "intro": "",
     "options": "",
     "feedback": "on_reject",
     "identity": "name_email",
     "order": "coverage",
     "min_reviews": 1,
-    "public": false,
     "project": "comfyui",
     "labels": "",
     "meta": ""
-   }
+   },
+   "color": "#283356",
+   "bgcolor": "#344275"
   },
   {
    "id": 21,
@@ -1248,7 +1252,21 @@
    "STRING"
   ]
  ],
- "groups": [],
+ "groups": [
+  {
+   "id": 1,
+   "title": "TrainyThing: review on your phone",
+   "bounding": [
+    874.5435546875,
+    56,
+    750.0000000000001,
+    288
+   ],
+   "color": "#6c8cf5",
+   "font_size": 24,
+   "flags": {}
+  }
+ ],
  "config": {},
  "extra": {
   "ds": {

@@ -15,6 +15,10 @@ from typing import Optional, Tuple
 
 __version__ = "0.1.0"
 
+#: ComfyUI serves this folder at /extensions/<pack>/ and loads its .js files
+#: (web/trainything.js: the nodes' default colour).
+WEB_DIRECTORY = "./web"
+
 #: pyproject.toml's ``requires-comfyui`` (``>=`` this); a test keeps them equal.
 REQUIRES_COMFYUI = "0.39.0"
 

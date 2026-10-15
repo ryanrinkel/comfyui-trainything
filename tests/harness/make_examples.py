@@ -29,6 +29,7 @@ import conftest  # noqa: E402  (loads the pack as comfyui_trainything)
 from comfyrun import Comfy  # noqa: E402
 from conftest import start_daemon  # noqa: E402
 from example_prompts import EXAMPLES  # noqa: E402
+import groups  # noqa: E402
 
 EXAMPLES_DIR = PACK / "examples"
 SHOTS = PACK / "docs" / "screenshots"
@@ -98,6 +99,7 @@ def main() -> None:
             api = root / f"{name}.api.json"
             api.write_text(json.dumps(fn()))
             subprocess.run(["node", str(HERE / "canvas.mjs"), "convert", comfy.url, str(api), str(EXAMPLES_DIR / f"{name}.json")], check=True)
+            groups.main([str(EXAMPLES_DIR / f"{name}.json")])  # the titled box around the TrainyThing part
         if "--check" in sys.argv:
             check(root, comfy, daemon)
         if shoot:

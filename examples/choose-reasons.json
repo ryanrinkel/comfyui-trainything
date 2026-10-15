@@ -1,5 +1,5 @@
 {
- "id": "b6948f85-9530-43fe-9f15-c2d03a12bfba",
+ "id": "e8b01e28-c590-4325-9f68-df22bbd9b276",
  "revision": 0,
  "last_node_id": 25,
  "last_link_id": 19,
@@ -890,7 +890,7 @@
    ],
    "size": [
     400,
-    708
+    354
    ],
    "flags": {},
    "order": 13,
@@ -926,15 +926,6 @@
      "link": null
     },
     {
-     "localized_name": "slug",
-     "name": "slug",
-     "type": "STRING",
-     "widget": {
-      "name": "slug"
-     },
-     "link": null
-    },
-    {
      "localized_name": "prompt",
      "name": "prompt",
      "type": "STRING",
@@ -944,20 +935,38 @@
      "link": null
     },
     {
-     "localized_name": "intro",
-     "name": "intro",
-     "type": "STRING",
-     "widget": {
-      "name": "intro"
-     },
-     "link": null
-    },
-    {
      "localized_name": "mode",
      "name": "mode",
      "type": "COMBO",
      "widget": {
       "name": "mode"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "public",
+     "name": "public",
+     "type": "BOOLEAN",
+     "widget": {
+      "name": "public"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "slug",
+     "name": "slug",
+     "type": "STRING",
+     "widget": {
+      "name": "slug"
+     },
+     "link": null
+    },
+    {
+     "localized_name": "intro",
+     "name": "intro",
+     "type": "STRING",
+     "widget": {
+      "name": "intro"
      },
      "link": null
     },
@@ -1003,15 +1012,6 @@
      "type": "INT",
      "widget": {
       "name": "min_reviews"
-     },
-     "link": null
-    },
-    {
-     "localized_name": "public",
-     "name": "public",
-     "type": "BOOLEAN",
-     "widget": {
-      "name": "public"
      },
      "link": null
     },
@@ -1146,16 +1146,17 @@
    },
    "widgets_values": [
     "Sprites",
-    "sprites-reasons",
     "What is wrong with it?",
-    "",
     "choose",
+    false,
+    false,
+    "sprites-reasons",
+    "",
     "hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine",
     "optional",
     "name_email",
     "coverage",
     1,
-    false,
     "comfyui",
     45,
     "partial",
@@ -1164,22 +1165,25 @@
    ],
    "widgets_values_named": {
     "title": "Sprites",
-    "slug": "sprites-reasons",
     "prompt": "What is wrong with it?",
-    "intro": "",
     "mode": "choose",
+    "public": false,
+    "more settings": false,
+    "slug": "sprites-reasons",
+    "intro": "",
     "options": "hair:Hair colour, scarf:Scarf, hands:Hands, ok:Fine",
     "feedback": "optional",
     "identity": "name_email",
     "order": "coverage",
     "min_reviews": 1,
-    "public": false,
     "project": "comfyui",
     "timeout_minutes": 45,
     "on_timeout": "partial",
     "labels": "",
     "meta": ""
-   }
+   },
+   "color": "#283356",
+   "bgcolor": "#344275"
   },
   {
    "id": 21,
@@ -1283,7 +1287,9 @@
    "widgets_values_named": {
     "rule": "option",
     "option_id": "hair"
-   }
+   },
+   "color": "#283356",
+   "bgcolor": "#344275"
   },
   {
    "id": 22,
@@ -1599,7 +1605,21 @@
    "STRING"
   ]
  ],
- "groups": [],
+ "groups": [
+  {
+   "id": 1,
+   "title": "TrainyThing: review on your phone",
+   "bounding": [
+    874.5435546875,
+    56,
+    1180.0,
+    740
+   ],
+   "color": "#6c8cf5",
+   "font_size": 24,
+   "flags": {}
+  }
+ ],
  "config": {},
  "extra": {
   "ds": {

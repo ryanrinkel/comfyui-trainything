@@ -18,11 +18,11 @@ class TrainyThingLoad(io.ComfyNode):
             description="Read a TrainyThing queue back by its slug: the images from the blob store, the keepers, the rejects, the notes and the seeds.",
             inputs=[
                 io.String.Input("slug", default="", dynamic_prompts=False,
-                                tooltip="The queue's link name (as on the dashboard), or its id."),
+                                tooltip="The short name of a batch that was already sent: the slug shown on the dashboard or on the Send or Review node."),
                 io.Boolean.Input("wait", default=False,
-                                 tooltip="Off: read what is judged now. On: wait until the queue is done (or the timeout), as Wait does."),
+                                 tooltip="Off: read the verdicts that exist right now. On: wait until the batch is finished (or the time runs out), like Review does."),
                 io.Float.Input("timeout_minutes", default=c.DEFAULT_TIMEOUT_MIN, min=0.1, max=10080.0, step=0.1, round=0.01,
-                               tooltip="With wait on: give up waiting after this long and load what is judged."),
+                               tooltip="With wait on: how long to wait before reading whatever has been judged so far.", advanced=True),
             ],
             outputs=[
                 io.Image.Output("accepted", display_name="accepted"),

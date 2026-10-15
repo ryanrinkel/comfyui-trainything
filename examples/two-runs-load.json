@@ -1,5 +1,5 @@
 {
- "id": "6bd109c0-4b61-4ad7-a8c9-4e849e6ed90a",
+ "id": "9dd21665-7f72-4985-a9d7-c98ef8c2faaf",
  "revision": 0,
  "last_node_id": 6,
  "last_link_id": 6,
@@ -112,13 +112,17 @@
    "widgets_values": [
     "sprites-08",
     false,
+    false,
     45
    ],
    "widgets_values_named": {
     "slug": "sprites-08",
     "wait": false,
+    "more settings": false,
     "timeout_minutes": 45
-   }
+   },
+   "color": "#283356",
+   "bgcolor": "#344275"
   },
   {
    "id": 2,
@@ -222,7 +226,9 @@
    "widgets_values_named": {
     "rule": "accepted",
     "option_id": ""
-   }
+   },
+   "color": "#283356",
+   "bgcolor": "#344275"
   },
   {
    "id": 3,
@@ -434,7 +440,21 @@
    "INT"
   ]
  ],
- "groups": [],
+ "groups": [
+  {
+   "id": 1,
+   "title": "TrainyThing: review on your phone",
+   "bounding": [
+    80,
+    56,
+    1050,
+    740
+   ],
+   "color": "#6c8cf5",
+   "font_size": 24,
+   "flags": {}
+  }
+ ],
  "config": {},
  "extra": {
   "ds": {

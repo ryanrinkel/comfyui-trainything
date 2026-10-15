@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- Every input and output has a plain-language tooltip (2026-10-15).
+- The nodes come coloured (`web/trainything.js`, `WEB_DIRECTORY`), and a fresh
+  Review or Send shows the essentials only: `images`, `title`, `prompt`,
+  `mode`, `public`. The other inputs are flagged `advanced` in the schema and
+  fold behind a **more settings** switch on the classic canvas; a loaded
+  workflow that changed one of them opens unfolded. Load and Filter fold the
+  same way. The inputs' order changed to put the essentials first, so
+  workflows saved by 0.1.0 (positional `widgets_values`) load through the
+  frontend's named values; the examples are regenerated.
+- `tests/harness/groups.py` draws a titled group box around the TrainyThing
+  nodes of a canvas workflow; the examples carry one.
+
 ## 0.1.0 — 2026-10-08
 
 The first version (PLAN-COMFY K0–K4). Not published to the Comfy Registry:

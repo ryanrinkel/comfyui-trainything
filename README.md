@@ -131,27 +131,34 @@ All five are under **TrainyThing** in the node library.
 Send, then Wait, in one node; the batch and its latent stay in memory across
 the wait. An output node: it runs with nothing wired downstream.
 
+A fresh node shows the essentials: `images`, `title`, `prompt`, `mode`,
+`public`. The rest sits behind a **more settings** switch on the node
+(`web/trainything.js`; the frontend's own *Show advanced inputs* in its
+Vue node renderer), and unfolds by itself when a loaded workflow changed
+one of them. The five nodes come coloured so the review part of a graph
+reads as one box; a colour you pick on the node wins.
+
 | Input | Default | What it does |
 |---|---|---|
 | `images` | | IMAGE, any batch size: one card per image |
 | `latent` (optional) | | LATENT of the same batch: `accepted_latent` is sliced from it |
 | `title` | `ComfyUI batch` | the queue's title on the phone and the dashboard |
-| `slug` | empty | the link name. Empty: from the title. An open queue's name: the cards are **appended** (see below). A closed queue's name: an error. `random`: an unguessable one |
 | `prompt` | `Keep this one?` | the question on every card |
-| `intro` | empty | shown before the first card. Empty: "Generated from: *the positive prompt*." and what to do in this mode |
 | `mode` | `single` | `single`, `pair`, `choose`, `select` (see Modes) |
+| `public` | off | start the tunnel now (before any upload), so the link works off this machine; if the tunnel fails, the console says so and the link is the local one |
+| `slug` (more settings, from here down) | empty | the link name. Empty: from the title. An open queue's name: the cards are **appended** (see below). A closed queue's name: an error. `random`: an unguessable one |
+| `intro` | empty | shown before the first card. Empty: "Generated from: *the positive prompt*." and what to do in this mode |
 | `options` | empty | `choose` / `select` only, required there: `id:Label, id:Label, …` |
 | `feedback` | `on_reject` | when the reviewer is asked why: `on_reject`, `optional`, `off`, `required` |
 | `identity` | `name_email` | reviewers give a name and email, or `anonymous` |
 | `order` | `coverage` | `coverage` (cards with fewest reviews first) or `fixed` (batch order) |
 | `min_reviews` | 1 | reviews per card before the queue is done (1 to 50) |
-| `public` | off | start the tunnel now (before any upload), so the link works off this machine; if the tunnel fails, the console says so and the link is the local one |
 | `project` | `comfyui` | the project tag on the dashboard |
+| `timeout_minutes` | 45 | stop waiting after this long (≥ 0.1); the queue stays open |
+| `on_timeout` | `partial` | `partial`: go on with what was judged, the rest `unjudged`. `block`: nothing downstream runs |
 | `images_b` (optional) | | `pair` mode: the B side, same batch size |
 | `labels` (optional) | empty | one line per image, shown above its card |
 | `meta` (optional) | empty | one JSON object for all images, or one per image (JSON lines or an array); merged over what the graph walk found, and it wins |
-| `timeout_minutes` | 45 | stop waiting after this long (≥ 0.1); the queue stays open |
-| `on_timeout` | `partial` | `partial`: go on with what was judged, the rest `unjudged`. `block`: nothing downstream runs |
 
 Hidden: the node's id, the prompt graph and the workflow, which go into each
 PNG's `prompt` / `workflow` chunks and feed the graph walk. Under ComfyUI's

@@ -16,7 +16,7 @@ class TrainyThingReview(io.ComfyNode):
     def define_schema(cls) -> io.Schema:
         inputs = send_inputs()
         # latent right after images, as the plan lists it
-        inputs.insert(1, io.Latent.Input("latent", optional=True, tooltip="The batch's latent: accepted_latent is sliced from it."))
+        inputs.insert(1, io.Latent.Input("latent", optional=True, tooltip="Optional: the latent from the KSampler that made these pictures. accepted_latent then carries the keepers' latents to a next step."))
         return io.Schema(
             node_id="TrainyThingReview",
             display_name="TrainyThing Review",
@@ -24,8 +24,8 @@ class TrainyThingReview(io.ComfyNode):
             description="Send the batch to a phone, wait for the verdicts, pass on the keepers, the rejects, the notes and the seeds.",
             inputs=inputs + wait_inputs(),
             outputs=wait_outputs() + [
-                io.String.Output("link", display_name="link"),
-                io.String.Output("slug", display_name="slug"),
+                io.String.Output("link", display_name="link", tooltip="The review link the phone was sent to."),
+                io.String.Output("slug", display_name="slug", tooltip="This batch's short name, for TrainyThing Load in a later run."),
             ],
             hidden=HIDDEN,
             is_output_node=True,
