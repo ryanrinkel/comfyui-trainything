@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from typing import Optional, Tuple
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 #: ComfyUI serves this folder at /extensions/<pack>/ and loads its .js files
 #: (web/trainything.js: the nodes' default colour).

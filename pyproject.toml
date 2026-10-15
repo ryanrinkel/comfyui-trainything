@@ -5,7 +5,7 @@
 [project]
 name = "trainything"
 description = "Send a ComfyUI batch to a phone for review with TrainyThing; the keepers, the notes and the seeds come back into the graph."
-version = "0.1.0"
+version = "0.2.0"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 # The same three lines as requirements.txt (ComfyUI already ships Pillow and numpy).

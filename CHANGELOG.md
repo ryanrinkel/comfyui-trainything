@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-10-15
+
+The first version on the Comfy Registry, as `trainything` (the registry asks
+for names without "ComfyUI"); the repository keeps its `comfyui-` prefix.
 
 - The daemon is on npm: `trainything` 0.1.0 (2026-10-15), so `npx -y trainything
   dashboard` is the install line and the nodes' auto-start works as written.
